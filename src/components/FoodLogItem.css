@@ -1,0 +1,204 @@
+/* FoodLogItem.css - Modern Purple Theme Styles */
+
+ion-item-sliding {
+  margin-bottom: 8px;
+  animation: slideInRight 0.3s ease-out;
+}
+
+ion-item {
+  --border-radius: var(--radius-md);
+  --padding-start: var(--space-md);
+  --padding-end: var(--space-md);
+  --min-height: 72px;
+  transition: all var(--transition-base);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: white;
+}
+
+ion-item:hover {
+  --background: var(--ion-color-light);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-sm);
+}
+
+ion-label h3 {
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+}
+
+ion-label p {
+  color: var(--ion-color-medium);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin: 4px 0;
+}
+
+.macro-info {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.macro-badge {
+  font-size: 0.75rem;
+  background: var(--ion-color-light);
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  color: var(--ion-color-dark);
+  font-weight: 700;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: all var(--transition-base);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Calorie Badge */
+.macro-badge:nth-child(1) {
+  background: linear-gradient(
+    135deg,
+    rgba(108, 99, 255, 0.15),
+    rgba(139, 95, 255, 0.15)
+  );
+  color: var(--ion-color-primary);
+  border-color: rgba(108, 99, 255, 0.2);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+/* Protein Badge */
+.macro-badge:nth-child(2) {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 107, 0.15),
+    rgba(255, 142, 83, 0.15)
+  );
+  color: var(--color-protein);
+  border-color: rgba(255, 107, 107, 0.2);
+}
+
+/* Carbs Badge */
+.macro-badge:nth-child(3) {
+  background: linear-gradient(
+    135deg,
+    rgba(78, 205, 196, 0.15),
+    rgba(81, 207, 102, 0.15)
+  );
+  color: var(--color-carbs);
+  border-color: rgba(78, 205, 196, 0.2);
+}
+
+/* Fats Badge */
+.macro-badge:nth-child(4) {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 230, 109, 0.15),
+    rgba(255, 176, 59, 0.15)
+  );
+  color: #d4a017;
+  border-color: rgba(255, 230, 109, 0.3);
+}
+
+.macro-badge:hover {
+  transform: scale(1.05);
+}
+
+.calories-note {
+  font-size: 1.15rem;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background-color: rgba(108, 99, 255, 0.1);
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Item Options (Swipe Actions) */
+ion-item-option {
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all var(--transition-base);
+}
+
+ion-item-option ion-icon {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+ion-item-option[color="danger"] {
+  --background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+}
+
+ion-item-option:not([color="danger"]) {
+  --background: linear-gradient(135deg, #667eea, #764ba2);
+  --color: white;
+}
+
+ion-item-option:hover {
+  opacity: 0.9;
+}
+
+/* Stagger animation for badges */
+.macro-badge:nth-child(1) {
+  animation: scaleIn 0.3s ease-out;
+  animation-delay: 0.1s;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+.macro-badge:nth-child(2) {
+  animation: scaleIn 0.3s ease-out;
+  animation-delay: 0.15s;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+.macro-badge:nth-child(3) {
+  animation: scaleIn 0.3s ease-out;
+  animation-delay: 0.2s;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+.macro-badge:nth-child(4) {
+  animation: scaleIn 0.3s ease-out;
+  animation-delay: 0.25s;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+
+/* Empty state */
+ion-list:empty::after {
+  content: "No food logged yet";
+  display: block;
+  text-align: center;
+  padding: 32px;
+  color: var(--ion-color-medium);
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .macro-info {
+    gap: 6px;
+  }
+
+  .macro-badge {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+  }
+
+  .calories-note {
+    font-size: 1rem;
+  }
+}

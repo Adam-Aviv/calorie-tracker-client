@@ -1,0 +1,239 @@
+/* Diary.css - Modern Purple Theme Styles */
+
+.calorie-summary {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 32px;
+  padding: 24px 0;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.calorie-circle {
+  text-align: center;
+  position: relative;
+}
+
+.calorie-circle::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    rgba(108, 99, 255, 0.1),
+    rgba(139, 95, 255, 0.1)
+  );
+  z-index: -1;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.calorie-value {
+  font-size: 3rem;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  margin-bottom: 4px;
+  animation: scaleIn 0.6s ease-out;
+}
+
+.calorie-goal {
+  font-size: 1.3rem;
+  color: var(--ion-color-medium);
+  margin-top: -8px;
+  font-weight: 500;
+}
+
+.calorie-label {
+  font-size: 0.95rem;
+  color: var(--ion-color-medium);
+  margin-top: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.calorie-remaining {
+  text-align: center;
+  padding: 16px 24px;
+  background: linear-gradient(
+    135deg,
+    rgba(81, 207, 102, 0.1),
+    rgba(78, 205, 196, 0.1)
+  );
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(81, 207, 102, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.calorie-remaining h3 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+  background: var(--gradient-success);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.calorie-remaining p {
+  margin: 6px 0 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ion-color-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.meal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.meal-header ion-card-title {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.meal-header ion-button {
+  --padding-start: 12px;
+  --padding-end: 12px;
+  height: 36px;
+  font-weight: 600;
+}
+
+/* Card Animations */
+ion-card {
+  animation: fadeInUp 0.4s ease-out;
+  transition: all var(--transition-base);
+}
+
+ion-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Daily Summary Card with Gradient */
+ion-card:first-of-type {
+  background: linear-gradient(
+    135deg,
+    rgba(108, 99, 255, 0.05),
+    rgba(139, 95, 255, 0.05)
+  );
+  border: 1px solid rgba(108, 99, 255, 0.1);
+}
+
+/* Meal Cards with Icons */
+ion-card:nth-of-type(2) {
+  animation-delay: 0.1s;
+  border-left: 4px solid #ffd93d;
+}
+
+ion-card:nth-of-type(3) {
+  animation-delay: 0.15s;
+  border-left: 4px solid #4ecdc4;
+}
+
+ion-card:nth-of-type(4) {
+  animation-delay: 0.2s;
+  border-left: 4px solid #ff6b6b;
+}
+
+ion-card:nth-of-type(5) {
+  animation-delay: 0.25s;
+  border-left: 4px solid #8b5fff;
+}
+
+/* FAB Button with Purple Glow */
+ion-fab-button {
+  --box-shadow: 0 8px 24px rgba(108, 99, 255, 0.4);
+  --background: var(--gradient-primary);
+  transition: all var(--transition-base);
+}
+
+ion-fab-button:hover {
+  transform: scale(1.1) rotate(90deg);
+  --box-shadow: 0 12px 32px rgba(108, 99, 255, 0.5);
+}
+
+ion-fab-button:active {
+  transform: scale(1.05) rotate(90deg);
+}
+
+/* Action Sheet Styling */
+.action-sheet-group {
+  background: var(--ion-card-background);
+}
+
+.action-sheet-button {
+  font-weight: 600;
+}
+
+/* Empty State */
+ion-text[color="medium"] p {
+  font-size: 0.95rem;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* Date Navigation Buttons */
+ion-header ion-button {
+  --color: white;
+  font-weight: 600;
+}
+
+ion-header ion-title {
+  font-weight: 800;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading State */
+ion-loading {
+  --background: rgba(255, 255, 255, 0.95);
+  --spinner-color: var(--ion-color-primary);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Stagger animation for meal cards */
+.stagger-cards ion-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.stagger-cards ion-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.stagger-cards ion-card:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.stagger-cards ion-card:nth-child(4) {
+  animation-delay: 0.2s;
+}
+.stagger-cards ion-card:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .calorie-summary {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .calorie-remaining {
+    width: 100%;
+  }
+}

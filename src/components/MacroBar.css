@@ -1,0 +1,136 @@
+/* MacroBar.css - Modern Purple Theme Styles */
+
+.macro-bar {
+  margin: 16px 0;
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.macro-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.macro-header strong {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.macro-values {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  background: var(--ion-color-light);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+}
+
+ion-progress-bar {
+  height: 10px;
+  border-radius: var(--radius-full);
+  --buffer-background: var(--ion-color-light);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  position: relative;
+  animation: slideInRight 0.5s ease-out;
+}
+
+/* Gradient Progress Bars by Color */
+ion-progress-bar[color="success"] {
+  --progress-background: linear-gradient(90deg, var(--color-protein), #ff8e53);
+}
+
+ion-progress-bar[color="warning"] {
+  --progress-background: linear-gradient(90deg, var(--color-carbs), #51cf66);
+}
+
+ion-progress-bar[color="danger"] {
+  --progress-background: linear-gradient(90deg, var(--color-fats), #ffb03b);
+}
+
+ion-progress-bar[color="primary"] {
+  --progress-background: var(--gradient-primary);
+}
+
+/* Shimmer effect on progress bar */
+ion-progress-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+.macro-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 0.85rem;
+}
+
+.macro-footer ion-text {
+  font-weight: 600;
+}
+
+/* Animated fill effect */
+@keyframes fillProgress {
+  from {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+ion-progress-bar {
+  animation: fillProgress 0.8s ease-out;
+}
+
+/* Pulse animation when near goal */
+.macro-bar.near-goal ion-progress-bar {
+  animation: fillProgress 0.8s ease-out, pulse 2s ease-in-out infinite;
+}
+
+/* Over goal styling */
+.macro-bar.over-goal ion-progress-bar {
+  --progress-background: linear-gradient(90deg, #ff6b6b, #ff8e53);
+}
+
+.macro-bar.over-goal .macro-values {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 107, 0.15),
+    rgba(255, 142, 83, 0.15)
+  );
+  color: var(--ion-color-danger);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .macro-bar {
+    margin: 12px 0;
+  }
+
+  .macro-header strong {
+    font-size: 0.85rem;
+  }
+
+  .macro-values {
+    font-size: 0.9rem;
+  }
+}

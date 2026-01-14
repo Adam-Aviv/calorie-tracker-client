@@ -1,2 +1,266 @@
-/* For information on how to create your own theme, please refer to:
-http://ionicframework.com/docs/theming/ */
+/* Ionic Variables and Theming. */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+  /* Primary Purple Gradient Colors */
+  --ion-color-primary: #6c63ff;
+  --ion-color-primary-rgb: 108, 99, 255;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #5f57e0;
+  --ion-color-primary-tint: #7b73ff;
+
+  /* Secondary - Lighter Purple */
+  --ion-color-secondary: #8b5fff;
+  --ion-color-secondary-rgb: 139, 95, 255;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #7a54e0;
+  --ion-color-secondary-tint: #976cff;
+
+  /* Success - Green */
+  --ion-color-success: #51cf66;
+  --ion-color-success-rgb: 81, 207, 102;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #47b65a;
+  --ion-color-success-tint: #62d475;
+
+  /* Warning - Orange */
+  --ion-color-warning: #ffd93d;
+  --ion-color-warning-rgb: 255, 217, 61;
+  --ion-color-warning-contrast: #000000;
+  --ion-color-warning-contrast-rgb: 0, 0, 0;
+  --ion-color-warning-shade: #e0bf36;
+  --ion-color-warning-tint: #ffdd50;
+
+  /* Danger - Coral Red */
+  --ion-color-danger: #ff6b6b;
+  --ion-color-danger-rgb: 255, 107, 107;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #e05e5e;
+  --ion-color-danger-tint: #ff7a7a;
+
+  /* Dark */
+  --ion-color-dark: #2d3748;
+  --ion-color-dark-rgb: 45, 55, 72;
+  --ion-color-dark-contrast: #ffffff;
+  --ion-color-dark-contrast-rgb: 255, 255, 255;
+  --ion-color-dark-shade: #28303f;
+  --ion-color-dark-tint: #42495a;
+
+  /* Medium */
+  --ion-color-medium: #718096;
+  --ion-color-medium-rgb: 113, 128, 150;
+  --ion-color-medium-contrast: #ffffff;
+  --ion-color-medium-contrast-rgb: 255, 255, 255;
+  --ion-color-medium-shade: #637184;
+  --ion-color-medium-tint: #7f8da1;
+
+  /* Light */
+  --ion-color-light: #f7fafc;
+  --ion-color-light-rgb: 247, 250, 252;
+  --ion-color-light-contrast: #000000;
+  --ion-color-light-contrast-rgb: 0, 0, 0;
+  --ion-color-light-shade: #d9dcde;
+  --ion-color-light-tint: #f8fbfc;
+
+  /* Custom Gradients */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --gradient-success: linear-gradient(135deg, #51cf66 0%, #4ecdc4 100%);
+  --gradient-danger: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+  --gradient-warning: linear-gradient(135deg, #ffd93d 0%, #ffb03b 100%);
+
+  /* Macro Colors */
+  --color-protein: #ff6b6b;
+  --color-carbs: #4ecdc4;
+  --color-fats: #ffe66d;
+
+  /* Background */
+  --ion-background-color: #f8f9fa;
+  --ion-background-color-rgb: 248, 249, 250;
+
+  /* Card Background */
+  --ion-card-background: #ffffff;
+
+  /* Text Colors */
+  --ion-text-color: #2d3748;
+  --ion-text-color-rgb: 45, 55, 72;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15), 0 6px 6px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15), 0 10px 10px rgba(0, 0, 0, 0.04);
+  --shadow-purple: 0 10px 30px rgba(108, 99, 255, 0.3);
+
+  /* Glass Effect */
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-bg-strong: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-blur: blur(10px);
+
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Typography */
+  --font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 30px;
+  --font-size-4xl: 36px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+}
+
+/* Apply Inter font globally */
+* {
+  font-family: var(--font-family);
+}
+
+/* iOS overrides */
+.ios {
+  --ion-toolbar-background: var(--gradient-primary);
+}
+
+/* MD (Material Design) overrides */
+.md {
+  --ion-toolbar-background: var(--gradient-primary);
+}
+
+/* Card Styling */
+ion-card {
+  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-lg);
+  transition: transform var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+ion-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Button Styling */
+ion-button {
+  --border-radius: var(--radius-md);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.3px;
+}
+
+/* Toolbar with Gradient */
+ion-toolbar {
+  --background: var(--gradient-primary);
+  --color: white;
+  --border-width: 0;
+}
+
+ion-title {
+  font-weight: 700;
+  font-size: var(--font-size-xl);
+}
+
+/* Tab Bar Styling */
+ion-tab-bar {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+  --background: var(--ion-card-background);
+}
+
+ion-tab-button {
+  --color: var(--ion-color-medium);
+  --color-selected: var(--ion-color-primary);
+}
+
+/* Item Styling */
+ion-item {
+  --border-radius: var(--radius-md);
+  --padding-start: var(--space-md);
+  --padding-end: var(--space-md);
+  --inner-padding-end: 0;
+  margin-bottom: var(--space-sm);
+}
+
+/* Input Styling */
+ion-input,
+ion-textarea,
+ion-select {
+  --padding-start: var(--space-sm);
+  --padding-end: var(--space-sm);
+}
+
+/* Searchbar */
+ion-searchbar {
+  --border-radius: var(--radius-lg);
+  --box-shadow: var(--shadow-sm);
+}
+
+/* Progress Bar */
+ion-progress-bar {
+  height: 8px;
+  border-radius: var(--radius-full);
+  --buffer-background: var(--ion-color-light);
+}
+
+/* Segment */
+ion-segment {
+  --background: var(--ion-color-light);
+  border-radius: var(--radius-lg);
+  padding: 4px;
+}
+
+ion-segment-button {
+  --indicator-color: var(--ion-color-primary);
+  --color-checked: white;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+}
+
+/* FAB Button */
+ion-fab-button {
+  --box-shadow: var(--shadow-purple);
+  --background: var(--gradient-primary);
+  transition: transform var(--transition-base);
+}
+
+ion-fab-button:hover {
+  transform: scale(1.05);
+}
+
+/* Modal */
+ion-modal {
+  --border-radius: var(--radius-xl);
+  --box-shadow: var(--shadow-xl);
+}
+
+/* List Header */
+ion-list-header {
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}

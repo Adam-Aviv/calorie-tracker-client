@@ -1,0 +1,268 @@
+/* AddFoodModal.css - Modern Purple Theme Styles */
+
+.food-macros {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+  font-weight: 600;
+}
+
+.food-macros span {
+  background: var(--ion-color-light);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-base);
+}
+
+.food-macros span:hover {
+  background: var(--ion-color-light-shade);
+  transform: scale(1.05);
+}
+
+.totals-display {
+  background: linear-gradient(
+    135deg,
+    rgba(108, 99, 255, 0.1),
+    rgba(139, 95, 255, 0.1)
+  );
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  margin: 24px 0;
+  border: 1px solid rgba(108, 99, 255, 0.2);
+  animation: scaleIn 0.4s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.totals-display::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.totals-display h4 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: var(--ion-color-dark);
+  font-weight: 800;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.totals-display p {
+  margin: 10px 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.totals-display p:first-of-type {
+  font-size: 1.3rem;
+  color: var(--ion-color-primary);
+}
+
+/* Modal Header */
+ion-modal ion-toolbar {
+  --background: var(--gradient-primary);
+  --color: white;
+}
+
+ion-modal ion-title {
+  font-weight: 800;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Segment Toggle */
+ion-modal ion-segment {
+  --background: white;
+  border-radius: var(--radius-lg);
+  padding: 6px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+}
+
+ion-modal ion-segment-button {
+  --indicator-color: transparent;
+  --color: var(--ion-color-medium);
+  --color-checked: white;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  transition: all var(--transition-base);
+}
+
+ion-modal ion-segment-button::part(indicator-background) {
+  background: var(--gradient-primary);
+}
+
+/* Search Bar */
+ion-searchbar {
+  --background: white;
+  --border-radius: var(--radius-lg);
+  --box-shadow: var(--shadow-sm);
+  --icon-color: var(--ion-color-primary);
+  padding: 12px 16px;
+}
+
+/* Food List Items */
+ion-modal ion-list {
+  background: transparent;
+}
+
+ion-modal ion-item {
+  --border-radius: var(--radius-md);
+  --padding-start: var(--space-md);
+  --padding-end: var(--space-md);
+  margin-bottom: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all var(--transition-base);
+  animation: slideInRight 0.3s ease-out;
+}
+
+ion-modal ion-item:hover {
+  --background: var(--ion-color-light);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--ion-color-primary);
+}
+
+ion-modal ion-item h3 {
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  font-size: 1.05rem;
+}
+
+ion-modal ion-item p {
+  color: var(--ion-color-medium);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+/* Input Fields */
+ion-modal ion-input,
+ion-modal ion-select {
+  --padding-start: var(--space-sm);
+  --padding-end: var(--space-sm);
+  font-weight: 600;
+}
+
+ion-modal ion-item[lines="none"] {
+  --padding-start: 0;
+  margin-bottom: 16px;
+}
+
+/* Buttons */
+ion-modal ion-button[expand="block"] {
+  --border-radius: var(--radius-md);
+  font-weight: 700;
+  height: 52px;
+  margin-top: 8px;
+  --box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+  text-transform: none;
+  font-size: 1rem;
+}
+
+ion-modal ion-button[expand="block"]:not([fill="clear"]) {
+  --background: var(--gradient-primary);
+  --box-shadow: var(--shadow-purple);
+}
+
+ion-modal ion-button[expand="block"]:hover {
+  transform: translateY(-2px);
+  --box-shadow: var(--shadow-lg);
+}
+
+ion-modal ion-button[fill="clear"] {
+  --color: var(--ion-color-medium);
+  font-weight: 600;
+}
+
+/* Note badges in list */
+ion-note {
+  font-weight: 800;
+  font-size: 1.1rem;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Loading */
+ion-loading {
+  --background: rgba(255, 255, 255, 0.95);
+  --spinner-color: var(--ion-color-primary);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Selected Food View */
+ion-modal .ion-padding h3 {
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: var(--ion-color-dark);
+  margin-bottom: 8px;
+}
+
+ion-modal .ion-padding > p {
+  color: var(--ion-color-medium);
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 24px;
+}
+
+/* Quick Add Form */
+ion-modal ion-text h3 {
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: var(--ion-color-dark);
+  margin-bottom: 8px;
+}
+
+ion-modal ion-text p {
+  color: var(--ion-color-medium);
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+}
+
+/* Stagger animation for list items */
+ion-list ion-item:nth-child(1) {
+  animation-delay: 0.05s;
+}
+ion-list ion-item:nth-child(2) {
+  animation-delay: 0.1s;
+}
+ion-list ion-item:nth-child(3) {
+  animation-delay: 0.15s;
+}
+ion-list ion-item:nth-child(4) {
+  animation-delay: 0.2s;
+}
+ion-list ion-item:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .totals-display {
+    padding: 16px;
+  }
+
+  .totals-display p {
+    font-size: 0.95rem;
+  }
+
+  .food-macros {
+    flex-wrap: wrap;
+  }
+}
