@@ -1,228 +1,157 @@
 import React, { useEffect, useState } from "react";
-import {
-  IonModal,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonButtons,
-  IonButton,
-  IonContent,
-  IonItem,
-  IonLabel,
-  IonInput,
-  IonSelect,
-  IonSelectOption,
-  IonSegment,
-  IonSegmentButton,
-  IonLoading,
-  IonText,
-} from "@ionic/react";
+import { IonModal, IonContent, IonLoading } from "@ionic/react";
+import { X, Zap, Hash, MessageSquare, Utensils } from "lucide-react";
 import type { FoodLog } from "../types";
-import {
-  apiErrorMessage,
-  useFoodByIdQuery,
-  useUpdateLogMutation,
-} from "../hooks/queries";
+import { useUpdateLogMutation } from "../hooks/queries";
 
 interface EditFoodLogModalProps {
   isOpen: boolean;
   onClose: () => void;
   log: FoodLog | null;
-  date: string; // ✅ add this
-  onUpdated: () => void;
+  date: string;
+  onUpdated?: () => void; // Add this line (the '?' makes it optional)
 }
+type MealType = "breakfast" | "lunch" | "dinner" | "snack";
 
 const EditFoodLogModal: React.FC<EditFoodLogModalProps> = ({
   isOpen,
   onClose,
   log,
   date,
-  onUpdated,
 }) => {
   const [servings, setServings] = useState(1);
-  const [mealType, setMealType] = useState<
-    "breakfast" | "lunch" | "dinner" | "snack"
-  >("breakfast");
+  const [mealType, setMealType] = useState<MealType>("breakfast");
   const [notes, setNotes] = useState("");
-  const [inputMode, setInputMode] = useState<"servings" | "units">("servings");
 
-  const foodQuery = useFoodByIdQuery(log?.foodId, isOpen && !!log?.foodId);
   const updateLogMut = useUpdateLogMutation();
 
-  const loading = foodQuery.isFetching || updateLogMut.isPending;
-
   useEffect(() => {
-    if (!log) return;
-    setServings(log.servings);
-    setMealType(log.mealType);
-    setNotes(log.notes || "");
-    setInputMode("servings");
+    if (log) {
+      setServings(log.servings);
+      setMealType(log.mealType as MealType);
+      setNotes(log.notes || "");
+    }
   }, [log]);
 
   const handleUpdate = async () => {
     if (!log) return;
-
     try {
       await updateLogMut.mutateAsync({
         date,
         id: log._id,
-        updates: {
-          servings,
-          mealType,
-          notes: notes || undefined,
-        },
+        updates: { servings, mealType, notes: notes || undefined },
       });
-
-      onUpdated();
-      handleClose();
+      onClose();
     } catch (e) {
-      console.error("Error updating food log:", e);
-      alert(apiErrorMessage(e, "Failed to update entry"));
+      console.error(e);
     }
-  };
-
-  const handleClose = () => {
-    onClose();
   };
 
   if (!log) return null;
 
-  const foodDetails = foodQuery.data || null;
-
-  const caloriesPerServing = log.calories / log.servings;
-  const proteinPerServing = log.protein / log.servings;
-  const carbsPerServing = log.carbs / log.servings;
-  const fatsPerServing = log.fats / log.servings;
-
   return (
-    <IonModal isOpen={isOpen} onDidDismiss={handleClose}>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Edit Food Log</IonTitle>
-          <IonButtons slot="end">
-            <IonButton onClick={handleClose}>Close</IonButton>
-          </IonButtons>
-        </IonToolbar>
-      </IonHeader>
+    <IonModal
+      isOpen={isOpen}
+      onDidDismiss={onClose}
+      className="rounded-t-[3rem]"
+    >
+      <IonContent>
+        <div className="p-6 h-full flex flex-col space-y-8">
+          {/* Header */}
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-black text-slate-900">Edit Entry</h2>
+            <button
+              onClick={onClose}
+              className="p-2 bg-slate-100 rounded-full text-slate-400"
+            >
+              <X size={20} />
+            </button>
+          </div>
 
-      <IonContent className="ion-padding">
-        <IonText>
-          <h2>{log.foodName}</h2>
-          {foodDetails ? (
-            <p>
-              Original: {log.servings} serving(s) ={" "}
-              {(log.servings * foodDetails.servingSize).toFixed(1)}{" "}
-              {foodDetails.servingUnit}
+          {/* Food Info Card */}
+          <div className="bg-slate-900 p-6 rounded-[2rem] text-center relative overflow-hidden shadow-xl">
+            <h3 className="text-white font-black text-xl mb-1">
+              {log.foodName}
+            </h3>
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+              Current: {Math.round(log.calories)} Cal
             </p>
-          ) : (
-            <p>Original: {log.servings} serving(s)</p>
-          )}
-        </IonText>
+            <Zap className="absolute -right-4 -bottom-4 text-white/10 w-24 h-24" />
+          </div>
 
-        {foodDetails && (
-          <IonSegment
-            value={inputMode}
-            onIonChange={(e) =>
-              setInputMode(e.detail.value as "servings" | "units")
-            }
-            style={{ marginBottom: "16px" }}
-          >
-            <IonSegmentButton value="servings">
-              <IonLabel>Servings</IonLabel>
-            </IonSegmentButton>
-            <IonSegmentButton value="units">
-              <IonLabel>
-                {foodDetails.servingUnit.charAt(0).toUpperCase() +
-                  foodDetails.servingUnit.slice(1)}
-              </IonLabel>
-            </IonSegmentButton>
-          </IonSegment>
-        )}
+          {/* Inputs */}
+          <div className="space-y-4">
+            {/* Servings Input */}
+            <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-4 border border-slate-100">
+              <div className="p-2 bg-white rounded-xl shadow-sm">
+                <Hash size={20} className="text-indigo-500" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Servings
+                </p>
+                <input
+                  type="number"
+                  step="0.5"
+                  className="w-full bg-transparent font-black text-xl outline-none"
+                  value={servings}
+                  onChange={(e) => setServings(parseFloat(e.target.value) || 0)}
+                />
+              </div>
+            </div>
 
-        {inputMode === "servings" || !foodDetails ? (
-          <IonItem>
-            <IonLabel position="floating">Servings</IonLabel>
-            <IonInput
-              type="number"
-              value={servings}
-              onIonInput={(e) => {
-                const v =
-                  ((e.target as HTMLIonInputElement).value as string) ?? "";
-                setServings(parseFloat(v) || 1);
-              }}
-              min="0.1"
-              step="0.5"
-            />
-          </IonItem>
-        ) : (
-          <IonItem>
-            <IonLabel position="floating">
-              Amount ({foodDetails.servingUnit})
-            </IonLabel>
-            <IonInput
-              type="number"
-              value={servings * foodDetails.servingSize}
-              onIonInput={(e) => {
-                const v =
-                  ((e.target as HTMLIonInputElement).value as string) ?? "";
-                const units = parseFloat(v) || 0;
-                setServings(units / foodDetails.servingSize);
-              }}
-              min="0.1"
-              step="1"
-            />
-          </IonItem>
-        )}
+            {/* Meal Type Select (Customized Style) */}
+            <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-4 border border-slate-100">
+              <div className="p-2 bg-white rounded-xl shadow-sm">
+                <Utensils size={20} className="text-amber-500" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Meal Type
+                </p>
+                <select
+                  className="w-full bg-transparent font-black text-lg outline-none appearance-none capitalize"
+                  value={mealType}
+                  onChange={(e) => setMealType(e.target.value as MealType)}
+                >
+                  <option value="breakfast">Breakfast</option>
+                  <option value="lunch">Lunch</option>
+                  <option value="dinner">Dinner</option>
+                  <option value="snack">Snack</option>
+                </select>
+              </div>
+            </div>
 
-        <IonItem>
-          <IonLabel>Meal Type</IonLabel>
-          <IonSelect
-            value={mealType}
-            onIonChange={(e) => setMealType(e.detail.value)}
-          >
-            <IonSelectOption value="breakfast">Breakfast</IonSelectOption>
-            <IonSelectOption value="lunch">Lunch</IonSelectOption>
-            <IonSelectOption value="dinner">Dinner</IonSelectOption>
-            <IonSelectOption value="snack">Snack</IonSelectOption>
-          </IonSelect>
-        </IonItem>
+            {/* Notes Input */}
+            <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-4 border border-slate-100">
+              <div className="p-2 bg-white rounded-xl shadow-sm">
+                <MessageSquare size={20} className="text-slate-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Notes
+                </p>
+                <input
+                  className="w-full bg-transparent font-bold text-slate-600 outline-none"
+                  placeholder="How was it?"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
 
-        <IonItem>
-          <IonLabel position="floating">Notes (optional)</IonLabel>
-          <IonInput
-            value={notes}
-            onIonInput={(e) =>
-              setNotes(
-                ((e.target as HTMLIonInputElement).value as string) ?? ""
-              )
-            }
-          />
-        </IonItem>
-
-        <div className="totals-display" style={{ marginTop: "20px" }}>
-          <h4>Updated Totals:</h4>
-          {inputMode === "units" && foodDetails && (
-            <p style={{ color: "var(--ion-color-medium)" }}>
-              {(servings * foodDetails.servingSize).toFixed(1)}{" "}
-              {foodDetails.servingUnit} = {servings.toFixed(2)} serving(s)
-            </p>
-          )}
-          <p>🔥 {Math.round(caloriesPerServing * servings)} calories</p>
-          <p>P: {Math.round(proteinPerServing * servings)}g</p>
-          <p>C: {Math.round(carbsPerServing * servings)}g</p>
-          <p>F: {Math.round(fatsPerServing * servings)}g</p>
+          {/* Action Button */}
+          <div className="pt-4">
+            <button
+              onClick={handleUpdate}
+              className="w-full bg-indigo-600 text-white h-16 rounded-[20px] font-black text-lg shadow-lg shadow-indigo-100 active:scale-95 transition-all"
+            >
+              Save Changes
+            </button>
+          </div>
         </div>
-
-        <IonButton
-          expand="block"
-          onClick={handleUpdate}
-          disabled={loading || servings <= 0}
-          style={{ marginTop: "20px" }}
-        >
-          Update Entry
-        </IonButton>
-
-        <IonLoading isOpen={loading} message="Updating..." />
+        <IonLoading isOpen={updateLogMut.isPending} />
       </IonContent>
     </IonModal>
   );

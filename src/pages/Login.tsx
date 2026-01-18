@@ -1,230 +1,175 @@
-// src/pages/Login.tsx
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import {
   IonContent,
   IonPage,
   IonInput,
-  IonButton,
-  IonText,
-  IonItem,
-  IonLabel,
   IonToast,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
+  IonLoading,
+  IonButton,
 } from "@ionic/react";
-import { useHistory } from "react-router-dom";
-import { AxiosError } from "axios";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-import { authAPI, usersAPI } from "../services/api";
-import { useAuthStore } from "../store/authStore";
-import type { ApiResponse, User } from "../types";
-
-type AuthPayload = { email: string; password: string; name?: string };
-type AuthResult = {
-  success: boolean;
-  data: { id: string; name: string; email: string; token: string };
-};
-
-const qk = {
-  profile: ["users", "profile"] as const,
-  me: ["auth", "me"] as const,
-};
+import { Mail, Lock, User as UserIcon, LogIn, ArrowRight } from "lucide-react";
+import { useLoginMutation } from "../hooks/queries";
 
 const Login: React.FC = () => {
-  const history = useHistory();
-  const qc = useQueryClient();
-
-  const setAuth = useAuthStore((state) => state.setAuth);
-  const setUser = useAuthStore((state) => state.setUser);
-
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
 
-  const authMutation = useMutation<
-    AuthResult,
-    AxiosError<ApiResponse>,
-    AuthPayload
-  >({
-    mutationFn: async (payload) => {
-      if (isRegister) {
-        return authAPI.register(
-          payload.email,
-          payload.password,
-          payload.name || ""
-        );
+  // Using your custom hook instead of inline useMutation
+  const authMutation = useLoginMutation(isRegister);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (isRegister && !name.trim()) {
+      setError("Name is required");
+      return;
+    }
+
+    authMutation.mutate(
+      { email: email.trim(), password, name: name.trim() },
+      {
+        onError: (err) => {
+          // Properly extracting error message using your API structure
+          setError(err.response?.data?.message || "Authentication failed");
+        },
       }
-      return authAPI.login(payload.email, payload.password);
-    },
-
-    onSuccess: async (response) => {
-      if (!response?.success) {
-        setError("Authentication failed");
-        return;
-      }
-
-      // 1) Store token + minimal user immediately
-      const minimalUser: User = {
-        id: response.data.id,
-        email: response.data.email,
-        name: response.data.name,
-        dailyCalorieGoal: 2000,
-        proteinGoal: 150,
-        carbsGoal: 250,
-        fatsGoal: 65,
-      };
-
-      setAuth(response.data.token, minimalUser);
-
-      // 2) Fetch full profile AFTER token exists, then store it
-      try {
-        const profile = await qc.fetchQuery({
-          queryKey: qk.profile,
-          queryFn: usersAPI.getProfile,
-        });
-
-        if (profile) {
-          setUser(profile);
-          qc.setQueryData(qk.profile, profile);
-          qc.setQueryData(qk.me, profile);
-        }
-      } catch {
-        // If profile fetch fails, keep minimal user (still allow navigation)
-      }
-
-      history.push("/tabs/diary");
-    },
-
-    onError: (err) => {
-      setError(err.response?.data?.message || "Authentication failed");
-    },
-  });
-
-  const loading = authMutation.isPending;
-
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      setError("");
-
-      // basic client-side checks
-      if (isRegister && !name.trim()) {
-        setError("Name is required");
-        return;
-      }
-
-      authMutation.mutate({
-        email: email.trim(),
-        password,
-        name: name.trim(),
-      });
-    },
-    [authMutation, email, password, name, isRegister]
-  );
+    );
+  };
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar color="primary">
-          <IonTitle>{isRegister ? "Sign Up" : "Sign In"}</IonTitle>
-        </IonToolbar>
-      </IonHeader>
-
-      <IonContent className="ion-padding">
-        <div className="login-container">
-          <div className="login-header">
-            <h1>🍎 NutriTrack</h1>
-            <p>Track your nutrition, reach your goals</p>
+      <IonContent className="--background: white;">
+        {/* Added h-full to the wrapper to ensure centering works on all devices */}
+        <div className="flex flex-col justify-center items-center min-h-full w-full px-8 py-12 bg-linear-to-b from-slate-50 to-white">
+          {/* Header Section */}
+          <div className="text-center mb-10 w-full max-w-sm">
+            <div className="inline-flex p-4 bg-indigo-600 rounded-[24px] shadow-xl shadow-indigo-100 mb-6 text-white">
+              <LogIn size={32} strokeWidth={2.5} />
+            </div>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">
+              NutriTrack
+            </h1>
+            <p className="text-slate-500 font-medium italic">
+              Personalized Nutrition Tracking
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="login-form">
-            {isRegister && (
-              <IonItem>
-                <IonLabel position="floating">Name</IonLabel>
-                <IonInput
-                  type="text"
-                  value={name}
-                  // IMPORTANT: use onIonInput to avoid "2nd click to submit" issues
-                  onIonInput={(e) =>
-                    setName(
-                      ((e.target as HTMLIonInputElement).value as string) ?? ""
-                    )
-                  }
-                  required
-                />
-              </IonItem>
-            )}
-
-            <IonItem>
-              <IonLabel position="floating">Email</IonLabel>
-              <IonInput
-                type="email"
-                value={email}
-                onIonInput={(e) =>
-                  setEmail(
-                    ((e.target as HTMLIonInputElement).value as string) ?? ""
+          <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
+            <div className="space-y-3">
+              {/* Input Containers */}
+              {[
+                {
+                  show: isRegister,
+                  icon: <UserIcon size={18} />,
+                  placeholder: "Full Name",
+                  val: name,
+                  set: setName,
+                  type: "text" as const,
+                },
+                {
+                  show: true,
+                  icon: <Mail size={18} />,
+                  placeholder: "Email Address",
+                  val: email,
+                  set: setEmail,
+                  type: "email" as const,
+                },
+                {
+                  show: true,
+                  icon: <Lock size={18} />,
+                  placeholder: "Password",
+                  val: password,
+                  set: setPassword,
+                  type: "password" as const,
+                },
+              ].map(
+                (field, i) =>
+                  field.show && (
+                    <div
+                      key={i}
+                      className="group bg-white rounded-[20px] border border-slate-200 p-1 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-50/50 transition-all duration-200"
+                    >
+                      <div className="flex items-center px-4">
+                        <span className="text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                          {field.icon}
+                        </span>
+                        <IonInput
+                          type={field.type}
+                          placeholder={field.placeholder}
+                          value={field.val}
+                          onIonInput={(e) => field.set(e.detail.value!)}
+                          style={{
+                            "--background": "transparent",
+                            "--padding-start": "12px",
+                          }}
+                          className="text-slate-900 font-bold h-12"
+                        />
+                      </div>
+                    </div>
                   )
-                }
-                required
-                inputMode="email"
-                autocomplete="email"
-              />
-            </IonItem>
+              )}
+            </div>
 
-            <IonItem>
-              <IonLabel position="floating">Password</IonLabel>
-              <IonInput
-                type="password"
-                value={password}
-                onIonInput={(e) =>
-                  setPassword(
-                    ((e.target as HTMLIonInputElement).value as string) ?? ""
-                  )
-                }
-                required
-                autocomplete={isRegister ? "new-password" : "current-password"}
-              />
-            </IonItem>
-
+            {/* THE BUTTON - Using IonButton for proper rounded corners */}
             <IonButton
-              expand="block"
+              disabled={authMutation.isPending}
               type="submit"
-              disabled={loading}
-              className="login-button"
+              expand="block"
+              className="mt-6 font-extrabold text-lg"
+              style={{
+                "--background": "#4f46e5",
+                "--background-activated": "#4338ca",
+                "--color": "#ffffff",
+                "--border-radius": "20px",
+                "--padding-top": "1rem",
+                "--padding-bottom": "1rem",
+                "--box-shadow": "0 10px 15px -3px rgba(79, 70, 229, 0.3)",
+                height: "4rem",
+              }}
             >
-              {loading ? "Loading..." : isRegister ? "Sign Up" : "Sign In"}
+              {authMutation.isPending ? (
+                <div className="h-6 w-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <div className="flex items-center gap-3">
+                  <span>{isRegister ? "Create Account" : "Sign In"}</span>
+                  <ArrowRight size={22} strokeWidth={3} />
+                </div>
+              )}
             </IonButton>
 
-            <div className="toggle-auth">
-              <IonText>
-                {isRegister
-                  ? "Already have an account?"
-                  : "Don't have an account?"}
-              </IonText>
-              <IonButton
-                fill="clear"
+            {/* Toggle Switch */}
+            <div className="flex items-center justify-center gap-2 pt-6">
+              <span className="text-slate-400 text-sm font-semibold">
+                {isRegister ? "Already a member?" : "New here?"}
+              </span>
+              <button
                 type="button"
-                disabled={loading}
                 onClick={() => {
                   setIsRegister(!isRegister);
                   setError("");
                 }}
+                className="text-indigo-600 font-black text-sm hover:text-indigo-700 active:opacity-70 transition-all"
               >
-                {isRegister ? "Sign In" : "Sign Up"}
-              </IonButton>
+                {isRegister ? "Sign In" : "Join NutriTrack"}
+              </button>
             </div>
           </form>
         </div>
 
+        <IonLoading
+          isOpen={authMutation.isPending}
+          message="Signing you in..."
+        />
         <IonToast
           isOpen={!!error}
           message={error}
           duration={3000}
           color="danger"
+          position="top"
           onDidDismiss={() => setError("")}
         />
       </IonContent>

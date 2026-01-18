@@ -1,4 +1,3 @@
-// src/pages/Profile.tsx
 import React, { useEffect, useRef, useState } from "react";
 import {
   IonContent,
@@ -6,27 +5,24 @@ import {
   IonHeader,
   IonToolbar,
   IonTitle,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardContent,
-  IonItem,
-  IonLabel,
-  IonInput,
   IonSelect,
   IonSelectOption,
-  IonButton,
   IonLoading,
-  IonText,
-  IonIcon,
   IonAlert,
+  IonButton,
 } from "@ionic/react";
-import { logOutOutline, calculatorOutline } from "ionicons/icons";
-import { useHistory } from "react-router-dom";
-import type { User } from "../types";
-import "./Profile.css";
 import {
-  apiErrorMessage,
+  User as UserIcon,
+  Scale,
+  Ruler,
+  Target,
+  LogOut,
+  Calculator,
+  Flame,
+  Save,
+} from "lucide-react";
+import { useHistory } from "react-router-dom";
+import {
   useCalculateTDEEMutation,
   useProfileQuery,
   useUpdateProfileMutation,
@@ -37,17 +33,14 @@ const Profile: React.FC = () => {
   const history = useHistory();
   const { user: storeUser, setUser, logout } = useAuthStore();
 
-  // Fetch profile via React Query (uses token)
   const profileQuery = useProfileQuery(true);
   const updateProfileMut = useUpdateProfileMutation();
   const calcTDEEMut = useCalculateTDEEMutation();
 
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
-  const [calculatedTDEE, setCalculatedTDEE] = useState<number | null>(null);
-
   const user = profileQuery.data || storeUser || undefined;
 
-  // Profile form state
+  // Form States
   const [name, setName] = useState(user?.name || "");
   const [currentWeight, setCurrentWeight] = useState(user?.currentWeight || 0);
   const [goalWeight, setGoalWeight] = useState(user?.goalWeight || 0);
@@ -56,11 +49,9 @@ const Profile: React.FC = () => {
   const [gender, setGender] = useState<"male" | "female" | "other">(
     user?.gender || "other"
   );
-  const [activityLevel, setActivityLevel] = useState<
-    "sedentary" | "light" | "moderate" | "active" | "very active"
-  >(user?.activityLevel || "moderate");
-
-  // Goals form state
+  const [activityLevel, setActivityLevel] = useState(
+    user?.activityLevel || "moderate"
+  );
   const [dailyCalorieGoal, setDailyCalorieGoal] = useState(
     user?.dailyCalorieGoal || 2000
   );
@@ -70,12 +61,8 @@ const Profile: React.FC = () => {
 
   const hydratedForUserIdRef = useRef<string | null>(null);
 
-  // When query loads/updates profile, sync it into the form
   useEffect(() => {
-    if (!user) return;
-
-    // hydrate only when the user changes (or first time)
-    if (hydratedForUserIdRef.current === user.id) return;
+    if (!user || hydratedForUserIdRef.current === user.id) return;
     hydratedForUserIdRef.current = user.id;
 
     setName(user.name || "");
@@ -85,21 +72,15 @@ const Profile: React.FC = () => {
     setAge(user.age || 0);
     setGender(user.gender || "other");
     setActivityLevel(user.activityLevel || "moderate");
-
     setDailyCalorieGoal(user.dailyCalorieGoal || 2000);
     setProteinGoal(user.proteinGoal || 150);
     setCarbsGoal(user.carbsGoal || 250);
     setFatsGoal(user.fatsGoal || 65);
   }, [user]);
 
-  const loading =
-    profileQuery.isFetching ||
-    updateProfileMut.isPending ||
-    calcTDEEMut.isPending;
-
   const handleUpdateProfile = async () => {
     try {
-      const updates: Partial<User> = {
+      const updated = await updateProfileMut.mutateAsync({
         name,
         currentWeight,
         goalWeight,
@@ -111,296 +92,285 @@ const Profile: React.FC = () => {
         proteinGoal,
         carbsGoal,
         fatsGoal,
-      };
-
-      const updated = await updateProfileMut.mutateAsync(updates);
-      if (updated) {
-        setUser(updated);
-        alert("Profile updated successfully!");
-      } else {
-        alert("Profile updated");
-      }
+      });
+      if (updated) setUser(updated);
     } catch (e) {
-      console.error("Error updating profile:", e);
-      alert(apiErrorMessage(e, "Failed to update profile"));
+      console.error(e);
     }
   };
 
   const handleCalculateTDEE = async () => {
     try {
       const result = await calcTDEEMut.mutateAsync();
-      setCalculatedTDEE(result.tdee);
       setDailyCalorieGoal(Math.round(result.tdee));
-      alert(
-        `Your estimated TDEE is ${Math.round(result.tdee)} calories per day!`
-      );
     } catch (e) {
-      console.error("Error calculating TDEE:", e);
-      alert(
-        apiErrorMessage(
-          e,
-          "Please fill in all required fields (weight, height, age, gender, activity level)"
-        )
-      );
+      console.error(e);
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    history.push("/login");
-  };
-
-  const activityLevels = [
-    { value: "sedentary", label: "Sedentary (little/no exercise)" },
-    { value: "light", label: "Light (1-3 days/week)" },
-    { value: "moderate", label: "Moderate (3-5 days/week)" },
-    { value: "active", label: "Active (6-7 days/week)" },
-    { value: "very active", label: "Very Active (2x per day)" },
-  ];
-
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar color="primary">
-          <IonTitle>Profile</IonTitle>
+      <IonHeader className="ion-no-border">
+        <IonToolbar className="--background: transparent; pt-4 px-4">
+          <IonTitle className="text-2xl font-black text-slate-900 px-0">
+            Settings
+          </IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent>
-        {/* Personal Info Card */}
-        <IonCard>
-          <IonCardHeader>
-            <IonCardTitle>Personal Information</IonCardTitle>
-          </IonCardHeader>
-          <IonCardContent>
-            <IonItem>
-              <IonLabel position="floating">Name</IonLabel>
-              <IonInput
-                value={name}
-                onIonInput={(e) =>
-                  setName(
-                    ((e.target as HTMLIonInputElement).value as string) ?? ""
-                  )
-                }
-              />
-            </IonItem>
+      <IonContent className="--background: #f8fafc;">
+        <div className="p-6 space-y-8 max-w-2xl mx-auto">
+          {/* Section: Profile Header */}
+          <div className="flex items-center gap-4 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+            <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-100">
+              <UserIcon size={32} />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">
+                {name || "Your Name"}
+              </h2>
+              <p className="text-slate-400 text-sm font-medium">
+                {user?.email}
+              </p>
+            </div>
+          </div>
 
-            <IonItem>
-              <IonLabel position="floating">Email</IonLabel>
-              <IonInput value={user?.email || ""} disabled />
-            </IonItem>
-
-            <IonItem>
-              <IonLabel position="floating">Current Weight (kg)</IonLabel>
-              <IonInput
-                type="number"
+          {/* Section: Body Metrics */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 ml-2">
+              Body Metrics
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              <MetricInput
+                icon={<Scale size={18} />}
+                label="Weight"
                 value={currentWeight}
-                onIonInput={(e) => {
-                  const v =
-                    ((e.target as HTMLIonInputElement).value as string) ?? "";
-                  setCurrentWeight(parseFloat(v) || 0);
-                }}
+                unit="kg"
+                onChange={setCurrentWeight}
               />
-            </IonItem>
-
-            <IonItem>
-              <IonLabel position="floating">Goal Weight (kg)</IonLabel>
-              <IonInput
-                type="number"
+              <MetricInput
+                icon={<Target size={18} />}
+                label="Goal"
                 value={goalWeight}
-                onIonInput={(e) => {
-                  const v =
-                    ((e.target as HTMLIonInputElement).value as string) ?? "";
-                  setGoalWeight(parseFloat(v) || 0);
-                }}
+                unit="kg"
+                onChange={setGoalWeight}
               />
-            </IonItem>
-
-            <IonItem>
-              <IonLabel position="floating">Height (cm)</IonLabel>
-              <IonInput
-                type="number"
+              <MetricInput
+                icon={<Ruler size={18} />}
+                label="Height"
                 value={height}
-                onIonInput={(e) => {
-                  const v =
-                    ((e.target as HTMLIonInputElement).value as string) ?? "";
-                  setHeight(parseFloat(v) || 0);
-                }}
+                unit="cm"
+                onChange={setHeight}
               />
-            </IonItem>
-
-            <IonItem>
-              <IonLabel position="floating">Age</IonLabel>
-              <IonInput
-                type="number"
+              <MetricInput
+                icon={<UserIcon size={18} />}
+                label="Age"
                 value={age}
-                onIonInput={(e) => {
-                  const v =
-                    ((e.target as HTMLIonInputElement).value as string) ?? "";
-                  setAge(parseInt(v, 10) || 0);
-                }}
+                unit="yrs"
+                onChange={setAge}
               />
-            </IonItem>
+            </div>
+          </div>
 
-            <IonItem>
-              <IonLabel>Gender</IonLabel>
+          {/* Section: Activity & Gender */}
+          <div className="bg-white rounded-[2rem] border border-slate-100 divide-y divide-slate-50 overflow-hidden shadow-sm">
+            <div className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-slate-50 rounded-xl text-slate-600">
+                  <UserIcon size={20} />
+                </div>
+                <span className="font-bold text-slate-700">Gender</span>
+              </div>
               <IonSelect
                 value={gender}
+                interface="popover"
                 onIonChange={(e) => setGender(e.detail.value)}
+                className="text-indigo-600 font-bold"
               >
                 <IonSelectOption value="male">Male</IonSelectOption>
                 <IonSelectOption value="female">Female</IonSelectOption>
                 <IonSelectOption value="other">Other</IonSelectOption>
               </IonSelect>
-            </IonItem>
-
-            <IonItem>
-              <IonLabel>Activity Level</IonLabel>
+            </div>
+            <div className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-slate-50 rounded-xl text-slate-600">
+                  <Flame size={20} />
+                </div>
+                <span className="font-bold text-slate-700">Activity</span>
+              </div>
               <IonSelect
                 value={activityLevel}
+                interface="action-sheet"
                 onIonChange={(e) => setActivityLevel(e.detail.value)}
+                className="text-indigo-600 font-bold max-w-[150px]"
               >
-                {activityLevels.map((level) => (
-                  <IonSelectOption key={level.value} value={level.value}>
-                    {level.label}
-                  </IonSelectOption>
-                ))}
+                <IonSelectOption value="sedentary">Sedentary</IonSelectOption>
+                <IonSelectOption value="light">Light</IonSelectOption>
+                <IonSelectOption value="moderate">Moderate</IonSelectOption>
+                <IonSelectOption value="active">Active</IonSelectOption>
               </IonSelect>
-            </IonItem>
-          </IonCardContent>
-        </IonCard>
+            </div>
+          </div>
 
-        {/* Nutrition Goals Card */}
-        <IonCard>
-          <IonCardHeader>
-            <div className="card-header-with-button">
-              <IonCardTitle>Nutrition Goals</IonCardTitle>
-              <IonButton
-                size="small"
+          {/* Section: Nutrition Goals */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between ml-2">
+              <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">
+                Daily Targets
+              </h3>
+              <button
                 onClick={handleCalculateTDEE}
-                disabled={loading}
+                className="text-indigo-600 text-xs font-black flex items-center gap-1 bg-indigo-50 px-3 py-1.5 rounded-full active:scale-95 transition-all"
               >
-                <IonIcon icon={calculatorOutline} slot="start" />
-                Calculate TDEE
-              </IonButton>
+                <Calculator size={14} /> CALC TDEE
+              </button>
             </div>
-          </IonCardHeader>
-          <IonCardContent>
-            {calculatedTDEE && (
-              <div className="tdee-info">
-                <IonText color="primary">
-                  <p>
-                    <strong>
-                      Estimated TDEE: {Math.round(calculatedTDEE)} cal/day
-                    </strong>
-                  </p>
-                </IonText>
+
+            <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-100 relative overflow-hidden">
+              <div className="relative z-10">
+                <p className="text-indigo-100 font-bold text-sm uppercase tracking-wider mb-2">
+                  Calories
+                </p>
+                <div className="flex items-end gap-2">
+                  <input
+                    type="number"
+                    value={dailyCalorieGoal}
+                    onChange={(e) =>
+                      setDailyCalorieGoal(parseInt(e.target.value))
+                    }
+                    className="bg-transparent text-5xl font-black w-32 outline-none border-b-2 border-indigo-400 focus:border-white transition-colors"
+                  />
+                  <span className="text-xl font-bold mb-2 text-indigo-200">
+                    kcal
+                  </span>
+                </div>
               </div>
-            )}
-
-            <IonItem>
-              <IonLabel position="floating">Daily Calorie Goal</IonLabel>
-              <IonInput
-                type="number"
-                value={dailyCalorieGoal}
-                onIonInput={(e) => {
-                  const v =
-                    ((e.target as HTMLIonInputElement).value as string) ?? "";
-                  setDailyCalorieGoal(parseInt(v, 10) || 2000);
-                }}
-              />
-            </IonItem>
-
-            <IonItem>
-              <IonLabel position="floating">Protein Goal (g)</IonLabel>
-              <IonInput
-                type="number"
-                value={proteinGoal}
-                onIonInput={(e) => {
-                  const v =
-                    ((e.target as HTMLIonInputElement).value as string) ?? "";
-                  setProteinGoal(parseInt(v, 10) || 150);
-                }}
-              />
-            </IonItem>
-
-            <IonItem>
-              <IonLabel position="floating">Carbs Goal (g)</IonLabel>
-              <IonInput
-                type="number"
-                value={carbsGoal}
-                onIonInput={(e) => {
-                  const v =
-                    ((e.target as HTMLIonInputElement).value as string) ?? "";
-                  setCarbsGoal(parseInt(v, 10) || 250);
-                }}
-              />
-            </IonItem>
-
-            <IonItem>
-              <IonLabel position="floating">Fats Goal (g)</IonLabel>
-              <IonInput
-                type="number"
-                value={fatsGoal}
-                onIonInput={(e) => {
-                  const v =
-                    ((e.target as HTMLIonInputElement).value as string) ?? "";
-                  setFatsGoal(parseInt(v, 10) || 65);
-                }}
-              />
-            </IonItem>
-
-            <div className="macro-totals">
-              <IonText color="medium">
-                <p>
-                  Total from macros:{" "}
-                  {proteinGoal * 4 + carbsGoal * 4 + fatsGoal * 9} cal
-                </p>
-                <p style={{ fontSize: "0.85rem" }}>
-                  (Protein & Carbs: 4 cal/g, Fats: 9 cal/g)
-                </p>
-              </IonText>
+              <Flame className="absolute -right-4 -bottom-4 text-indigo-500/30 w-32 h-32" />
             </div>
-          </IonCardContent>
-        </IonCard>
 
-        {/* Actions */}
-        <div className="ion-padding">
-          <IonButton
-            expand="block"
-            onClick={handleUpdateProfile}
-            disabled={loading}
-          >
-            Save Changes
-          </IonButton>
+            <div className="grid grid-cols-3 gap-3">
+              <MacroBox
+                label="Protein"
+                value={proteinGoal}
+                color="bg-rose-500"
+                onChange={setProteinGoal}
+              />
+              <MacroBox
+                label="Carbs"
+                value={carbsGoal}
+                color="bg-amber-500"
+                onChange={setCarbsGoal}
+              />
+              <MacroBox
+                label="Fats"
+                value={fatsGoal}
+                color="bg-sky-500"
+                onChange={setFatsGoal}
+              />
+            </div>
+          </div>
 
-          <IonButton
-            expand="block"
-            color="danger"
-            fill="outline"
-            onClick={() => setShowLogoutAlert(true)}
-            disabled={loading}
-          >
-            <IonIcon icon={logOutOutline} slot="start" />
-            Logout
-          </IonButton>
+          {/* Buttons */}
+          <div className="pt-6 space-y-3">
+            <IonButton
+              expand="block"
+              onClick={handleUpdateProfile}
+              className="h-16 font-black text-lg"
+              style={{
+                "--background": "#0f172a",
+                "--background-activated": "#1e293b",
+                "--color": "#ffffff",
+                "--border-radius": "20px",
+                "--padding-top": "0",
+                "--padding-bottom": "0",
+                "--box-shadow": "0 20px 25px -5px rgb(0 0 0 / 0.1)",
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <Save size={20} />
+                Save Settings
+              </div>
+            </IonButton>
+
+            <IonButton
+              expand="block"
+              fill="clear"
+              onClick={() => setShowLogoutAlert(true)}
+              className="h-14 font-bold"
+              style={{
+                "--color": "#ef4444",
+                "--background-activated": "#fef2f2",
+                "--border-radius": "20px",
+                "--padding-top": "0",
+                "--padding-bottom": "0",
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <LogOut size={18} />
+                Logout Account
+              </div>
+            </IonButton>
+          </div>
         </div>
 
-        <IonLoading isOpen={loading} message="Please wait..." />
-
+        <IonLoading isOpen={updateProfileMut.isPending} message="Saving..." />
         <IonAlert
           isOpen={showLogoutAlert}
           onDidDismiss={() => setShowLogoutAlert(false)}
           header="Logout"
-          message="Are you sure you want to logout?"
+          message="Are you sure you want to leave?"
           buttons={[
             { text: "Cancel", role: "cancel" },
-            { text: "Logout", role: "destructive", handler: handleLogout },
+            {
+              text: "Logout",
+              role: "destructive",
+              handler: () => {
+                logout();
+                history.push("/login");
+              },
+            },
           ]}
         />
       </IonContent>
     </IonPage>
   );
 };
+
+// --- Sub-components for cleaner code ---
+
+const MetricInput = ({ icon, label, value, unit, onChange }: any) => (
+  <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex flex-col gap-1 focus-within:border-indigo-500 transition-all">
+    <div className="flex items-center gap-2 text-slate-400">
+      {icon}
+      <span className="text-[10px] font-black uppercase tracking-tighter">
+        {label}
+      </span>
+    </div>
+    <div className="flex items-baseline gap-1">
+      <input
+        type="number"
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="w-full text-lg font-bold text-slate-900 outline-none bg-transparent"
+      />
+      <span className="text-xs font-bold text-slate-300">{unit}</span>
+    </div>
+  </div>
+);
+
+const MacroBox = ({ label, value, color, onChange }: any) => (
+  <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm text-center space-y-1 focus-within:ring-2 focus-within:ring-slate-100 transition-all">
+    <div className={`w-2 h-2 rounded-full mx-auto ${color}`} />
+    <p className="text-[10px] font-black uppercase text-slate-400">{label}</p>
+    <input
+      type="number"
+      value={value}
+      onChange={(e) => onChange(parseInt(e.target.value))}
+      className="w-full text-center text-lg font-black text-slate-900 outline-none bg-transparent"
+    />
+    <p className="text-[10px] font-bold text-slate-300 italic">grams</p>
+  </div>
+);
 
 export default Profile;
