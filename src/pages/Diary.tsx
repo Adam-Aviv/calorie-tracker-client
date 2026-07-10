@@ -14,7 +14,6 @@ import { useUIStore } from "../store/uiStore"; // Added UI Store
 import type { FoodLog } from "../types";
 import MacroBar from "../components/MacroBar";
 import FoodLogItem from "../components/FoodLogItem";
-import AddFoodModal from "../components/AddFoodModal";
 import EditFoodLogModal from "../components/EditFoodLogModal";
 import { useDailyLogsQuery, useDeleteLogMutation, qk } from "../hooks/queries";
 import { useQueryClient } from "@tanstack/react-query";
@@ -25,8 +24,7 @@ const Diary: React.FC = () => {
   const qc = useQueryClient();
 
   // Connect to the Global UI Store
-  const { showAddFood, closeAddFood, openAddFood, selectedMealType } =
-    useUIStore();
+  const { openAddFood } = useUIStore();
 
   const [currentDate, setCurrentDate] = useState(
     format(new Date(), "yyyy-MM-dd")
@@ -67,6 +65,16 @@ const Diary: React.FC = () => {
     setExpandedMeals((prev) =>
       prev.includes(meal) ? prev.filter((m) => m !== meal) : [...prev, meal]
     );
+  };
+
+  const mealLabels: Record<
+    "breakfast" | "lunch" | "dinner" | "snack",
+    string
+  > = {
+    breakfast: "Breakfast",
+    lunch: "Lunch",
+    dinner: "Dinner",
+    snack: "Snack",
   };
 
   return (
@@ -196,16 +204,14 @@ const Diary: React.FC = () => {
                 >
                   <button
                     onClick={() => toggleMeal(mt)}
-                    className="w-full p-5 flex items-center justify-between active:bg-slate-50 transition-colors"
+                    className="w-full px-5 py-5 flex items-center justify-center relative active:bg-slate-50 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="font-black text-slate-900 uppercase tracking-tight text-sm">
-                        {mt}
-                      </span>
-                    </div>
+                    <span className="font-black text-slate-900 text-sm">
+                      {mealLabels[mt]}
+                    </span>
                     <ChevronDown
                       size={18}
-                      className={`text-slate-300 transition-transform ${
+                      className={`absolute right-5 text-slate-300 transition-transform ${
                         isExpanded ? "rotate-180" : ""
                       }`}
                     />
@@ -220,12 +226,12 @@ const Diary: React.FC = () => {
                       ) : (
                         mealLogs.map((log) => (
                           <FoodLogItem
-                            key={log._id}
+                            key={log.id}
                             log={log}
                             onDelete={() =>
                               deleteLogMut.mutate({
                                 date: currentDate,
-                                id: log._id,
+                                id: log.id,
                               })
                             }
                             onEdit={() => {
@@ -248,15 +254,6 @@ const Diary: React.FC = () => {
             })}
           </div>
         </div>
-
-        {/* Global Modals connected to store */}
-        <AddFoodModal
-          isOpen={showAddFood}
-          onClose={closeAddFood}
-          date={currentDate}
-          mealType={selectedMealType}
-          onFoodAdded={() => {}}
-        />
 
         <EditFoodLogModal
           isOpen={showEditModal}

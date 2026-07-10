@@ -38,7 +38,7 @@ const EditFoodLogModal: React.FC<EditFoodLogModalProps> = ({
     try {
       await updateLogMut.mutateAsync({
         date,
-        id: log._id,
+        id: log.id,
         updates: { servings, mealType, notes: notes || undefined },
       });
       onClose();
@@ -53,7 +53,9 @@ const EditFoodLogModal: React.FC<EditFoodLogModalProps> = ({
     <IonModal
       isOpen={isOpen}
       onDidDismiss={onClose}
-      className="rounded-t-[3rem]"
+      initialBreakpoint={1}
+      breakpoints={[0, 1]}
+      className="app-modal"
     >
       <IonContent>
         <div className="p-6 h-full flex flex-col space-y-8">

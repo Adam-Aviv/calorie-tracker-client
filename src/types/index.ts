@@ -21,13 +21,12 @@ export interface AuthResponse {
     id: string;
     name: string;
     email: string;
-    token: string;
   };
 }
 
 // Food Types
 export interface Food {
-  _id: string;
+  id: string;
   userId: string;
   name: string;
   calories: number;
@@ -53,7 +52,7 @@ export interface CreateFoodInput {
 
 // Food Log Types
 export interface FoodLog {
-  _id: string;
+  id: string;
   userId: string;
   foodId: string;
   date: string;
@@ -98,7 +97,7 @@ export interface DailyData {
 
 // Weight Types
 export interface WeightEntry {
-  _id: string;
+  id: string;
   userId: string;
   weight: number;
   date: string;
@@ -111,16 +110,8 @@ export interface CreateWeightInput {
   notes?: string;
 }
 
-// API Response
-export interface ValidationError {
-  msg: string;
-  param: string;
-  location: string;
-}
-
 export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
-  errors?: ValidationError[];
 }

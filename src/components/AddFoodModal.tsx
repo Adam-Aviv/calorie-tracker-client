@@ -1,31 +1,32 @@
 import React, { useState } from "react";
 import { IonModal, IonContent, IonLoading } from "@ionic/react";
 import { Search, X, Zap, Hash, MessageSquare } from "lucide-react";
+import { format } from "date-fns";
 import type { Food } from "../types";
 import { useFoodsQuery, useCreateLogMutation } from "../hooks/queries";
+import { useUIStore } from "../store/uiStore";
+import AppButton from "./AppButton";
 
-interface AddFoodModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  date: string;
-  mealType: string;
-  onFoodAdded: () => void;
-}
+const AddFoodModal: React.FC = () => {
+  const { showAddFood, closeAddFood, selectedMealType } = useUIStore();
+  const date = format(new Date(), "yyyy-MM-dd");
 
-const AddFoodModal: React.FC<AddFoodModalProps> = ({
-  isOpen,
-  onClose,
-  date,
-  mealType,
-}) => {
   const [searchText, setSearchText] = useState("");
   const [selectedFood, setSelectedFood] = useState<Food | null>(null);
   const [servings, setServings] = useState(1);
   const [notes, setNotes] = useState("");
 
-  const foodsQuery = useFoodsQuery({ search: searchText }, isOpen);
+  const foodsQuery = useFoodsQuery({ search: searchText }, showAddFood);
   const createLogMut = useCreateLogMutation();
   const foods = foodsQuery.data || [];
+
+  const handleClose = () => {
+    closeAddFood();
+    setSearchText("");
+    setSelectedFood(null);
+    setServings(1);
+    setNotes("");
+  };
 
   const handleAdd = async () => {
     if (!selectedFood) return;
@@ -33,36 +34,33 @@ const AddFoodModal: React.FC<AddFoodModalProps> = ({
     await createLogMut.mutateAsync({
       date,
       input: {
-        foodId: selectedFood._id,
+        foodId: selectedFood.id,
         date,
-        // Cast to the specific union type instead of 'any'
-        mealType: mealType as "breakfast" | "lunch" | "dinner" | "snack",
+        mealType: selectedMealType,
         servings,
         notes: notes || undefined,
       },
     });
 
-    onClose();
-    setSelectedFood(null);
+    handleClose();
   };
 
   return (
     <IonModal
-      isOpen={isOpen}
-      onDidDismiss={onClose}
-      initialBreakpoint={0.9}
-      breakpoints={[0, 0.9, 1]}
-      handle={true}
-      className="rounded-t-[3rem]"
+      isOpen={showAddFood}
+      onDidDismiss={handleClose}
+      initialBreakpoint={1}
+      breakpoints={[0, 1]}
+      className="app-modal"
     >
       <IonContent className="--background: #fff;">
         <div className="p-6 h-full flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-black text-slate-900 capitalize">
-              Add {mealType}
+              Add {selectedMealType}
             </h2>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="p-2 bg-slate-100 rounded-full text-slate-400"
             >
               <X size={20} />
@@ -87,7 +85,7 @@ const AddFoodModal: React.FC<AddFoodModalProps> = ({
               <div className="flex-1 overflow-y-auto space-y-3 pr-1">
                 {foods.map((food) => (
                   <button
-                    key={food._id}
+                    key={food.id}
                     onClick={() => setSelectedFood(food)}
                     className="w-full p-4 bg-white border border-slate-100 rounded-3xl flex items-center justify-between shadow-sm active:bg-slate-50 transition-all"
                   >
@@ -156,18 +154,19 @@ const AddFoodModal: React.FC<AddFoodModalProps> = ({
                 </div>
               </div>
 
-              <button
+              <AppButton
                 onClick={handleAdd}
-                className="w-full bg-slate-900 text-white h-16 rounded-[20px] font-black text-lg shadow-xl active:scale-95 transition-all"
+                disabled={createLogMut.isPending}
               >
+                <Zap size={20} />
                 Log Food Item
-              </button>
-              <button
+              </AppButton>
+              <AppButton
+                variant="muted"
                 onClick={() => setSelectedFood(null)}
-                className="w-full text-slate-400 font-bold py-2"
               >
                 Back to Search
-              </button>
+              </AppButton>
             </div>
           )}
         </div>

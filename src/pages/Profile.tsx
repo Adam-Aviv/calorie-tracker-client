@@ -9,7 +9,8 @@ import {
   IonSelectOption,
   IonLoading,
   IonAlert,
-  IonButton,
+  IonItem,
+  IonLabel,
 } from "@ionic/react";
 import {
   User as UserIcon,
@@ -22,6 +23,7 @@ import {
   Save,
 } from "lucide-react";
 import { useHistory } from "react-router-dom";
+import AppButton from "../components/AppButton";
 import {
   useCalculateTDEEMutation,
   useProfileQuery,
@@ -101,7 +103,13 @@ const Profile: React.FC = () => {
 
   const handleCalculateTDEE = async () => {
     try {
-      const result = await calcTDEEMut.mutateAsync();
+      const result = await calcTDEEMut.mutateAsync({
+        currentWeight,
+        height,
+        age,
+        gender,
+        activityLevel,
+      });
       setDailyCalorieGoal(Math.round(result.tdee));
     } catch (e) {
       console.error(e);
@@ -174,74 +182,66 @@ const Profile: React.FC = () => {
 
           {/* Section: Activity & Gender */}
           <div className="bg-white rounded-[2rem] border border-slate-100 divide-y divide-slate-50 overflow-hidden shadow-sm">
-            <div className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-slate-50 rounded-xl text-slate-600">
-                  <UserIcon size={20} />
-                </div>
-                <span className="font-bold text-slate-700">Gender</span>
-              </div>
-              <IonSelect
-                value={gender}
-                interface="popover"
-                onIonChange={(e) => setGender(e.detail.value)}
-                className="text-indigo-600 font-bold"
-              >
-                <IonSelectOption value="male">Male</IonSelectOption>
-                <IonSelectOption value="female">Female</IonSelectOption>
-                <IonSelectOption value="other">Other</IonSelectOption>
-              </IonSelect>
-            </div>
-            <div className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-slate-50 rounded-xl text-slate-600">
-                  <Flame size={20} />
-                </div>
-                <span className="font-bold text-slate-700">Activity</span>
-              </div>
-              <IonSelect
-                value={activityLevel}
-                interface="action-sheet"
-                onIonChange={(e) => setActivityLevel(e.detail.value)}
-                className="text-indigo-600 font-bold max-w-[150px]"
-              >
-                <IonSelectOption value="sedentary">Sedentary</IonSelectOption>
-                <IonSelectOption value="light">Light</IonSelectOption>
-                <IonSelectOption value="moderate">Moderate</IonSelectOption>
-                <IonSelectOption value="active">Active</IonSelectOption>
-              </IonSelect>
-            </div>
+            <SettingSelectRow
+              icon={<UserIcon size={20} />}
+              label="Gender"
+              value={gender}
+              onChange={(v) => setGender(v as "male" | "female" | "other")}
+              options={[
+                { value: "male", label: "Male" },
+                { value: "female", label: "Female" },
+                { value: "other", label: "Other" },
+              ]}
+            />
+            <SettingSelectRow
+              icon={<Flame size={20} />}
+              label="Activity"
+              value={activityLevel}
+              onChange={(v) =>
+                setActivityLevel(
+                  v as "sedentary" | "light" | "moderate" | "active" | "very active"
+                )
+              }
+              options={[
+                { value: "sedentary", label: "Sedentary" },
+                { value: "light", label: "Light" },
+                { value: "moderate", label: "Moderate" },
+                { value: "active", label: "Active" },
+                { value: "very active", label: "Very Active" },
+              ]}
+            />
           </div>
+
+          {/* TDEE Calculator */}
+          <AppButton
+            onClick={handleCalculateTDEE}
+            disabled={calcTDEEMut.isPending}
+          >
+            <Calculator size={20} />
+            {calcTDEEMut.isPending ? "Calculating..." : "Calculate TDEE"}
+          </AppButton>
 
           {/* Section: Nutrition Goals */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between ml-2">
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">
-                Daily Targets
-              </h3>
-              <button
-                onClick={handleCalculateTDEE}
-                className="text-indigo-600 text-xs font-black flex items-center gap-1 bg-indigo-50 px-3 py-1.5 rounded-full active:scale-95 transition-all"
-              >
-                <Calculator size={14} /> CALC TDEE
-              </button>
-            </div>
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 ml-2">
+              Daily Targets
+            </h3>
 
             <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-100 relative overflow-hidden">
               <div className="relative z-10">
-                <p className="text-indigo-100 font-bold text-sm uppercase tracking-wider mb-2">
+                <p className="text-indigo-100 font-bold text-sm uppercase tracking-wider mb-3">
                   Calories
                 </p>
-                <div className="flex items-end gap-2">
+                <div className="flex items-baseline gap-3">
                   <input
                     type="number"
                     value={dailyCalorieGoal}
                     onChange={(e) =>
                       setDailyCalorieGoal(parseInt(e.target.value))
                     }
-                    className="bg-transparent text-5xl font-black w-32 outline-none border-b-2 border-indigo-400 focus:border-white transition-colors"
+                    className="bg-transparent text-5xl font-black w-36 outline-none border-b-2 border-indigo-400/60 focus:border-white transition-colors pb-1 leading-none"
                   />
-                  <span className="text-xl font-bold mb-2 text-indigo-200">
+                  <span className="text-lg font-bold text-indigo-200/80">
                     kcal
                   </span>
                 </div>
@@ -273,44 +273,15 @@ const Profile: React.FC = () => {
 
           {/* Buttons */}
           <div className="pt-6 space-y-3">
-            <IonButton
-              expand="block"
-              onClick={handleUpdateProfile}
-              className="h-16 font-black text-lg"
-              style={{
-                "--background": "#0f172a",
-                "--background-activated": "#1e293b",
-                "--color": "#ffffff",
-                "--border-radius": "20px",
-                "--padding-top": "0",
-                "--padding-bottom": "0",
-                "--box-shadow": "0 20px 25px -5px rgb(0 0 0 / 0.1)",
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <Save size={20} />
-                Save Settings
-              </div>
-            </IonButton>
+            <AppButton onClick={handleUpdateProfile} disabled={updateProfileMut.isPending}>
+              <Save size={20} />
+              Save Settings
+            </AppButton>
 
-            <IonButton
-              expand="block"
-              fill="clear"
-              onClick={() => setShowLogoutAlert(true)}
-              className="h-14 font-bold"
-              style={{
-                "--color": "#ef4444",
-                "--background-activated": "#fef2f2",
-                "--border-radius": "20px",
-                "--padding-top": "0",
-                "--padding-bottom": "0",
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <LogOut size={18} />
-                Logout Account
-              </div>
-            </IonButton>
+            <AppButton variant="ghost" onClick={() => setShowLogoutAlert(true)}>
+              <LogOut size={18} />
+              Logout Account
+            </AppButton>
           </div>
         </div>
 
@@ -325,8 +296,8 @@ const Profile: React.FC = () => {
             {
               text: "Logout",
               role: "destructive",
-              handler: () => {
-                logout();
+              handler: async () => {
+                await logout();
                 history.push("/login");
               },
             },
@@ -338,6 +309,57 @@ const Profile: React.FC = () => {
 };
 
 // --- Sub-components for cleaner code ---
+
+const settingItemStyle = {
+  "--background": "transparent",
+  "--padding-start": "16px",
+  "--padding-end": "16px",
+  "--inner-padding-end": "0",
+  "--min-height": "64px",
+} as React.CSSProperties;
+
+const selectStyle = {
+  "--padding-start": "0",
+  "--padding-end": "0",
+  "--placeholder-color": "#4f46e5",
+  "--highlight-color-focused": "#4f46e5",
+  maxWidth: "140px",
+} as React.CSSProperties;
+
+const SettingSelectRow = ({
+  icon,
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+}) => (
+  <IonItem lines="none" style={settingItemStyle} className="profile-setting-item">
+    <div slot="start" className="flex items-center gap-3 mr-1">
+      <div className="p-2 bg-slate-50 rounded-xl text-slate-600">{icon}</div>
+    </div>
+    <IonLabel className="!font-bold !text-slate-700">{label}</IonLabel>
+    <IonSelect
+      slot="end"
+      value={value}
+      interface="action-sheet"
+      onIonChange={(e) => onChange(e.detail.value)}
+      className="profile-setting-select font-bold text-indigo-600"
+      style={selectStyle}
+    >
+      {options.map((opt) => (
+        <IonSelectOption key={opt.value} value={opt.value}>
+          {opt.label}
+        </IonSelectOption>
+      ))}
+    </IonSelect>
+  </IonItem>
+);
 
 const MetricInput = ({ icon, label, value, unit, onChange }: any) => (
   <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex flex-col gap-1 focus-within:border-indigo-500 transition-all">

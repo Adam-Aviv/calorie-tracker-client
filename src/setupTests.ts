@@ -2,7 +2,28 @@
 // allows you to do things like:
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
-import '@testing-library/jest-dom/extend-expect';
+import "@testing-library/jest-dom/extend-expect";
+import { vi } from "vitest";
+
+vi.mock("./lib/supabase", () => ({
+  supabase: {
+    auth: {
+      getSession: vi
+        .fn()
+        .mockResolvedValue({ data: { session: null }, error: null }),
+      onAuthStateChange: vi.fn(() => ({
+        data: { subscription: { unsubscribe: vi.fn() } },
+      })),
+      getUser: vi
+        .fn()
+        .mockResolvedValue({ data: { user: null }, error: null }),
+      signUp: vi.fn(),
+      signInWithPassword: vi.fn(),
+      signOut: vi.fn(),
+    },
+    from: vi.fn(),
+  },
+}));
 
 // Mock matchmedia
 window.matchMedia = window.matchMedia || function() {

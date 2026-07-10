@@ -14,21 +14,19 @@ import {
   IonModal,
   RefresherEventDetail,
 } from "@ionic/react";
-import { Trash2, Edit3, Search, Utensils, Zap, X, Layers } from "lucide-react";
+import { Trash2, Edit3, Search, Utensils, Zap, X, Layers, Save } from "lucide-react";
 import type { Food } from "../types";
 import {
   apiErrorMessage,
-  useCreateFoodMutation,
   useDeleteFoodMutation,
   useFoodsQuery,
   useUpdateFoodMutation,
 } from "../hooks/queries";
 import { useQueryClient } from "@tanstack/react-query";
-import { useUIStore } from "../store/uiStore"; // Added UI Store
+import AppButton from "../components/AppButton";
 
 const Foods: React.FC = () => {
   const qc = useQueryClient();
-  const { showAddFoodLibrary, closeAddFoodLibrary } = useUIStore();
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [showModal, setShowModal] = useState(false);
@@ -54,13 +52,11 @@ const Foods: React.FC = () => {
     true
   );
 
-  const createFoodMut = useCreateFoodMutation();
   const updateFoodMut = useUpdateFoodMutation();
   const deleteFoodMut = useDeleteFoodMutation();
 
   const loading =
     foodsQuery.isFetching ||
-    createFoodMut.isPending ||
     updateFoodMut.isPending ||
     deleteFoodMut.isPending;
   const foods = foodsQuery.data || [];
@@ -86,14 +82,10 @@ const Foods: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (!editingFood) return;
     try {
-      if (editingFood) {
-        await updateFoodMut.mutateAsync({ id: editingFood._id, updates: form });
-      } else {
-        await createFoodMut.mutateAsync(form);
-      }
+      await updateFoodMut.mutateAsync({ id: editingFood.id, updates: form });
       setShowModal(false);
-      closeAddFoodLibrary(); // Add this
     } catch (e) {
       alert(apiErrorMessage(e, "Failed to save food"));
     }
@@ -119,7 +111,7 @@ const Foods: React.FC = () => {
             <h1 className="text-2xl font-black text-slate-900">Food Library</h1>
           </div>
 
-          <div className="relative mb-4">
+          <div className="relative mb-2">
             <Search
               className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
               size={18}
@@ -131,22 +123,6 @@ const Foods: React.FC = () => {
               onChange={(e) => setSearchText(e.target.value)}
             />
           </div>
-
-          <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setCategoryFilter(cat)}
-                className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-                  categoryFilter === cat
-                    ? "bg-slate-900 text-white shadow-md"
-                    : "bg-slate-100 text-slate-400"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
         </IonToolbar>
       </IonHeader>
 
@@ -155,10 +131,41 @@ const Foods: React.FC = () => {
           <IonRefresherContent />
         </IonRefresher>
 
-        <div className="px-6 py-4">
+        <div className="px-6 pt-4 pb-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
+            {categories.map((cat) => {
+              const isActive = categoryFilter === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setCategoryFilter(cat)}
+                  style={{
+                    flexShrink: 0,
+                    height: "40px",
+                    padding: "0 20px",
+                    borderRadius: "16px",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    textTransform: "capitalize",
+                    whiteSpace: "nowrap",
+                    border: `1.5px solid ${isActive ? "#4f46e5" : "#e2e8f0"}`,
+                    background: isActive ? "#eef2ff" : "#ffffff",
+                    color: isActive ? "#4f46e5" : "#64748b",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  {cat}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="px-6 pb-4">
           <div className="flex flex-col gap-3">
             {foods.map((food) => (
-              <IonItemSliding key={food._id}>
+              <IonItemSliding key={food.id}>
                 <IonItem
                   lines="none"
                   className="--background: transparent --padding-start: 0 --inner-padding-end: 0"
@@ -212,7 +219,7 @@ const Foods: React.FC = () => {
                     <Edit3 size={20} />
                   </IonItemOption>
                   <IonItemOption
-                    onClick={() => deleteFoodMut.mutate(food._id)}
+                    onClick={() => deleteFoodMut.mutate(food.id)}
                     className="bg-rose-500 rounded-2xl ml-2"
                   >
                     <Trash2 size={20} />
@@ -225,26 +232,18 @@ const Foods: React.FC = () => {
 
         {/* Add/Edit Modal */}
         <IonModal
-          isOpen={showModal || showAddFoodLibrary} // Changed: combine both states
-          onDidDismiss={() => {
-            setShowModal(false);
-            closeAddFoodLibrary();
-          }}
-          initialBreakpoint={0.9}
-          breakpoints={[0, 0.9]}
-          handle={true}
+          isOpen={showModal}
+          onDidDismiss={() => setShowModal(false)}
+          initialBreakpoint={1}
+          breakpoints={[0, 1]}
+          className="app-modal"
         >
           <IonContent className="ion-padding">
             <div className="space-y-6">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-2xl font-black text-slate-900">
-                  {editingFood ? "Edit Food" : "New Food"}
-                </h2>
+                <h2 className="text-2xl font-black text-slate-900">Edit Food</h2>
                 <button
-                  onClick={() => {
-                    setShowModal(false);
-                    closeAddFoodLibrary(); // Add this
-                  }}
+                  onClick={() => setShowModal(false)}
                   className="p-2 bg-slate-100 rounded-full"
                 >
                   <X size={20} />
@@ -361,13 +360,13 @@ const Foods: React.FC = () => {
                 </div>
               </div>
 
-              <button
+              <AppButton
                 onClick={handleSubmit}
                 disabled={!form.name || form.calories <= 0 || loading}
-                className="w-full bg-slate-900 text-white h-16 rounded-[20px] font-black text-lg shadow-xl active:scale-95 transition-all disabled:opacity-50"
               >
-                {editingFood ? "Update Food" : "Add to Library"}
-              </button>
+                <Save size={20} />
+                Update Food
+              </AppButton>
             </div>
           </IonContent>
         </IonModal>

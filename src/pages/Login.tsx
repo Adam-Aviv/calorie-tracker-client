@@ -33,8 +33,7 @@ const Login: React.FC = () => {
       { email: email.trim(), password, name: name.trim() },
       {
         onError: (err) => {
-          // Properly extracting error message using your API structure
-          setError(err.response?.data?.message || "Authentication failed");
+          setError(err.message || "Authentication failed");
         },
       }
     );

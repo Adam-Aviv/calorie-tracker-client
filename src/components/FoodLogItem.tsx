@@ -57,7 +57,7 @@ const FoodLogItem: React.FC<FoodLogItemProps> = ({ log, onDelete, onEdit }) => {
           <Edit3 size={20} />
         </IonItemOption>
         <IonItemOption
-          onClick={() => onDelete(log._id)}
+          onClick={() => onDelete(log.id)}
           className="bg-rose-500 rounded-2xl ml-2"
         >
           <Trash2 size={20} />

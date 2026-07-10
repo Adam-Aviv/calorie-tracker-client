@@ -29,9 +29,39 @@ ion-tab-bar {
 }
 
 ion-tab-button {
-  --background: transparent;
+  --background: transparent !important;
+  --background-focused: transparent !important;
+  --color: #94a3b8;
+  --color-selected: #4f46e5;
+  --ripple-color: transparent;
+  background: transparent !important;
   overflow: visible !important;
   contain: none !important;
+}
+
+ion-tab-button::part(native) {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+ion-tab-button.tab-selected,
+ion-tab-button.tab-selected::part(native) {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+ion-select.profile-setting-select::part(icon) {
+  color: #4f46e5;
+  opacity: 1;
+}
+
+ion-select.profile-setting-select::part(text) {
+  color: #4f46e5;
+  font-weight: 700;
+}
+
+ion-item.profile-setting-item::part(native) {
+  padding-inline: 16px;
 }
 
 ion-tabs,
@@ -43,4 +73,15 @@ ion-tab-bar {
 .tabs-inner {
   overflow: visible !important;
   contain: none !important;
+}
+
+/* Full-height sheet modals */
+ion-modal.app-modal {
+  --height: 100%;
+  --border-radius: 20px 20px 0 0;
+  align-items: flex-end;
+}
+
+ion-modal.app-modal::part(content) {
+  border-radius: 20px 20px 0 0;
 }

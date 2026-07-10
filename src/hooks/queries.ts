@@ -1,8 +1,6 @@
 // src/hooks/queries.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AxiosError } from "axios";
 import type {
-  ApiResponse,
   CreateFoodInput,
   CreateFoodLogInput,
   CreateWeightInput,
@@ -37,24 +35,23 @@ export const qk = {
 };
 
 function apiErrorMessage(err: unknown, fallback: string) {
-  const e = err as AxiosError<ApiResponse>;
-  return e?.response?.data?.message || fallback;
+  if (err instanceof Error) return err.message;
+  return fallback;
 }
 
 // -------------------- AUTH --------------------
 type AuthResult = {
   success: boolean;
-  data: { id: string; name: string; email: string; token: string };
+  data: { id: string; name: string; email: string };
 };
 
 export function useLoginMutation(isRegister: boolean) {
   const qc = useQueryClient();
-  const setAuth = useAuthStore((s) => s.setAuth);
   const setUser = useAuthStore((s) => s.setUser);
 
   return useMutation<
     AuthResult,
-    AxiosError<ApiResponse>,
+    Error,
     { email: string; password: string; name?: string }
   >({
     mutationFn: async (payload) => {
@@ -80,9 +77,8 @@ export function useLoginMutation(isRegister: boolean) {
         fatsGoal: 65,
       };
 
-      setAuth(res.data.token, minimalUser);
+      setUser(minimalUser);
 
-      // fetch full profile
       try {
         const profile = await qc.fetchQuery({
           queryKey: qk.profile,
@@ -113,7 +109,7 @@ export function useUpdateProfileMutation() {
   const qc = useQueryClient();
   const setUser = useAuthStore((s) => s.setUser);
 
-  return useMutation<User | undefined, AxiosError<ApiResponse>, Partial<User>>({
+  return useMutation<User | undefined, Error, Partial<User>>({
     mutationFn: usersAPI.updateProfile,
     onSuccess: (updated) => {
       if (!updated) return;
@@ -125,8 +121,8 @@ export function useUpdateProfileMutation() {
 }
 
 export function useCalculateTDEEMutation() {
-  return useMutation<{ tdee: number }, AxiosError<ApiResponse>>({
-    mutationFn: usersAPI.calculateTDEE,
+  return useMutation<{ tdee: number }, Error, Partial<User> | void>({
+    mutationFn: (profile) => usersAPI.calculateTDEE(profile ?? undefined),
   });
 }
 
@@ -152,14 +148,9 @@ export function useFoodByIdQuery(id?: string, enabled = true) {
 
 export function useCreateFoodMutation() {
   const qc = useQueryClient();
-  return useMutation<
-    Food | undefined,
-    AxiosError<ApiResponse>,
-    CreateFoodInput
-  >({
+  return useMutation<Food | undefined, Error, CreateFoodInput>({
     mutationFn: foodsAPI.create,
     onSuccess: () => {
-      // refresh any foods lists
       qc.invalidateQueries({ queryKey: ["foods"] });
     },
   });
@@ -169,7 +160,7 @@ export function useUpdateFoodMutation() {
   const qc = useQueryClient();
   return useMutation<
     Food | undefined,
-    AxiosError<ApiResponse>,
+    Error,
     { id: string; updates: Partial<CreateFoodInput> }
   >({
     mutationFn: ({ id, updates }) => foodsAPI.update(id, updates),
@@ -182,7 +173,7 @@ export function useUpdateFoodMutation() {
 
 export function useDeleteFoodMutation() {
   const qc = useQueryClient();
-  return useMutation<void, AxiosError<ApiResponse>, string>({
+  return useMutation<void, Error, string>({
     mutationFn: foodsAPI.delete,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["foods"] });
@@ -203,7 +194,7 @@ export function useCreateLogMutation() {
   const qc = useQueryClient();
   return useMutation<
     FoodLog | undefined,
-    AxiosError<ApiResponse>,
+    Error,
     { date: string; input: CreateFoodLogInput }
   >({
     mutationFn: ({ input }) => logsAPI.create(input),
@@ -217,7 +208,7 @@ export function useUpdateLogMutation() {
   const qc = useQueryClient();
   return useMutation<
     FoodLog | undefined,
-    AxiosError<ApiResponse>,
+    Error,
     { date: string; id: string; updates: Partial<CreateFoodLogInput> }
   >({
     mutationFn: ({ id, updates }) => logsAPI.update(id, updates),
@@ -229,11 +220,7 @@ export function useUpdateLogMutation() {
 
 export function useDeleteLogMutation() {
   const qc = useQueryClient();
-  return useMutation<
-    void,
-    AxiosError<ApiResponse>,
-    { date: string; id: string }
-  >({
+  return useMutation<void, Error, { date: string; id: string }>({
     mutationFn: ({ id }) => logsAPI.delete(id),
     onSuccess: (_res, vars) => {
       qc.invalidateQueries({ queryKey: qk.daily(vars.date) });
@@ -252,11 +239,7 @@ export function useWeightsQuery(enabled = true) {
 
 export function useCreateWeightMutation() {
   const qc = useQueryClient();
-  return useMutation<
-    WeightEntry | undefined,
-    AxiosError<ApiResponse>,
-    CreateWeightInput
-  >({
+  return useMutation<WeightEntry | undefined, Error, CreateWeightInput>({
     mutationFn: weightAPI.create,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.weights });
@@ -268,7 +251,7 @@ export function useUpdateWeightMutation() {
   const qc = useQueryClient();
   return useMutation<
     WeightEntry | undefined,
-    AxiosError<ApiResponse>,
+    Error,
     { id: string; updates: Partial<CreateWeightInput> }
   >({
     mutationFn: ({ id, updates }) => weightAPI.update(id, updates),
@@ -280,7 +263,7 @@ export function useUpdateWeightMutation() {
 
 export function useDeleteWeightMutation() {
   const qc = useQueryClient();
-  return useMutation<void, AxiosError<ApiResponse>, string>({
+  return useMutation<void, Error, string>({
     mutationFn: weightAPI.delete,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.weights });

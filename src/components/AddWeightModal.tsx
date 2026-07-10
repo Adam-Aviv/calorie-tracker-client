@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { IonModal, IonContent, IonButton, IonLoading } from "@ionic/react";
+import { IonModal, IonContent, IonLoading } from "@ionic/react";
 import { Scale } from "lucide-react";
 import { format } from "date-fns";
 import { useUIStore } from "../store/uiStore";
 import { useCreateWeightMutation } from "../hooks/queries";
+import AppButton from "./AppButton";
 
 const AddWeightModal: React.FC = () => {
   const { showAddWeight, closeAddWeight } = useUIStore();
@@ -25,9 +26,9 @@ const AddWeightModal: React.FC = () => {
       <IonModal
         isOpen={showAddWeight}
         onDidDismiss={closeAddWeight}
-        initialBreakpoint={0.6}
-        breakpoints={[0, 0.6]}
-        handle={true}
+        initialBreakpoint={1}
+        breakpoints={[0, 1]}
+        className="app-modal"
       >
         <IonContent className="ion-padding">
           <div className="p-8 space-y-6">
@@ -76,34 +77,17 @@ const AddWeightModal: React.FC = () => {
               </div>
             </div>
 
-            <IonButton
-              expand="block"
+            <AppButton
               onClick={handleAddWeight}
-              className="font-black text-lg"
-              style={{
-                "--background": "#4f46e5",
-                "--background-activated": "#4338ca",
-                "--color": "#ffffff",
-                "--border-radius": "20px",
-                "--padding-top": "1rem",
-                "--padding-bottom": "1rem",
-                "--box-shadow": "0 10px 15px -3px rgba(79, 70, 229, 0.2)",
-              }}
+              disabled={!weight || createMut.isPending}
             >
+              <Scale size={20} />
               Save Entry
-            </IonButton>
+            </AppButton>
 
-            <IonButton
-              expand="block"
-              fill="clear"
-              onClick={closeAddWeight}
-              className="font-bold"
-              style={{
-                "--color": "#94a3b8",
-              }}
-            >
+            <AppButton variant="muted" onClick={closeAddWeight}>
               Cancel
-            </IonButton>
+            </AppButton>
           </div>
         </IonContent>
       </IonModal>

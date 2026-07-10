@@ -183,7 +183,7 @@ const Progress: React.FC = () => {
                 .slice(0, 5)
                 .map((entry) => (
                   <div
-                    key={entry._id}
+                    key={entry.id}
                     className="bg-white p-4 rounded-3xl border border-slate-50 shadow-sm flex items-center justify-between group active:scale-[0.98] transition-all"
                   >
                     <div className="flex items-center gap-4">
@@ -200,7 +200,7 @@ const Progress: React.FC = () => {
                       </div>
                     </div>
                     <button
-                      onClick={() => deleteMut.mutate(entry._id)}
+                      onClick={() => deleteMut.mutate(entry.id)}
                       className="p-2 text-slate-300 hover:text-rose-500 transition-colors"
                     >
                       <Trash2 size={18} />
