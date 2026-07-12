@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { IonModal, IonContent, IonLoading } from "@ionic/react";
 import { X, Zap, Layers, PlusCircle } from "lucide-react";
-import {
-  apiErrorMessage,
-  useCreateFoodMutation,
-} from "../hooks/queries";
+import { apiErrorMessage, useCreateFoodMutation } from "../hooks/queries";
 import { useUIStore } from "../store/uiStore";
 import AppButton from "./AppButton";
 
 const CATEGORIES = [
   "protein",
   "carbs",
+  "fats",
   "vegetables",
   "fruits",
   "dairy",
@@ -185,7 +183,9 @@ const AddFoodLibraryModal: React.FC = () => {
 
             <AppButton
               onClick={handleSubmit}
-              disabled={!form.name || form.calories <= 0 || createFoodMut.isPending}
+              disabled={
+                !form.name || form.calories <= 0 || createFoodMut.isPending
+              }
             >
               <PlusCircle size={20} />
               Add to Library

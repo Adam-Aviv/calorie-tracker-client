@@ -14,7 +14,16 @@ import {
   IonModal,
   RefresherEventDetail,
 } from "@ionic/react";
-import { Trash2, Edit3, Search, Utensils, Zap, X, Layers, Save } from "lucide-react";
+import {
+  Trash2,
+  Edit3,
+  Search,
+  Utensils,
+  Zap,
+  X,
+  Layers,
+  Save,
+} from "lucide-react";
 import type { Food } from "../types";
 import {
   apiErrorMessage,
@@ -49,16 +58,14 @@ const Foods: React.FC = () => {
       search: searchText,
       category: categoryFilter === "all" ? undefined : categoryFilter,
     },
-    true
+    true,
   );
 
   const updateFoodMut = useUpdateFoodMutation();
   const deleteFoodMut = useDeleteFoodMutation();
 
   const loading =
-    foodsQuery.isFetching ||
-    updateFoodMut.isPending ||
-    deleteFoodMut.isPending;
+    foodsQuery.isFetching || updateFoodMut.isPending || deleteFoodMut.isPending;
   const foods = foodsQuery.data || [];
 
   const handleRefresh = async (e: CustomEvent<RefresherEventDetail>) => {
@@ -95,6 +102,7 @@ const Foods: React.FC = () => {
     "all",
     "protein",
     "carbs",
+    "fats",
     "vegetables",
     "fruits",
     "dairy",
@@ -241,7 +249,9 @@ const Foods: React.FC = () => {
           <IonContent className="ion-padding">
             <div className="space-y-6">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-2xl font-black text-slate-900">Edit Food</h2>
+                <h2 className="text-2xl font-black text-slate-900">
+                  Edit Food
+                </h2>
                 <button
                   onClick={() => setShowModal(false)}
                   className="p-2 bg-slate-100 rounded-full"

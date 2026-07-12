@@ -1,74 +1,11 @@
--- Run this in the Supabase SQL Editor (Dashboard → SQL → New query)
+-- Seed foods from nutrition spreadsheet
+-- Categories: carbs, protein, fruits, fats
+-- Skips rows with serving_size = 0 / no nutrition data
+--
+-- Run this once in the Supabase SQL Editor.
+-- After this, every new signup automatically gets these foods
+-- via public.handle_new_user().
 
--- Profiles (extends auth.users)
-create table public.profiles (
-  id uuid references auth.users on delete cascade primary key,
-  email text not null,
-  name text not null,
-  current_weight numeric,
-  goal_weight numeric,
-  height numeric,
-  age integer,
-  gender text check (gender in ('male', 'female', 'other')),
-  activity_level text check (activity_level in ('sedentary', 'light', 'moderate', 'active', 'very active')),
-  daily_calorie_goal integer not null default 2000,
-  protein_goal integer not null default 150,
-  carbs_goal integer not null default 250,
-  fats_goal integer not null default 65,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
--- Foods library
-create table public.foods (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users on delete cascade not null,
-  name text not null,
-  calories numeric not null,
-  protein numeric not null,
-  carbs numeric not null,
-  fats numeric not null,
-  serving_size numeric not null,
-  serving_unit text not null,
-  category text not null default 'other',
-  created_at timestamptz not null default now()
-);
-
--- Daily food logs (macros denormalized for fast reads)
-create table public.food_logs (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users on delete cascade not null,
-  food_id uuid references public.foods on delete set null,
-  date date not null,
-  meal_type text not null check (meal_type in ('breakfast', 'lunch', 'dinner', 'snack')),
-  servings numeric not null,
-  calories numeric not null,
-  protein numeric not null,
-  carbs numeric not null,
-  fats numeric not null,
-  food_name text not null,
-  notes text,
-  created_at timestamptz not null default now()
-);
-
--- Weight tracking
-create table public.weight_entries (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users on delete cascade not null,
-  weight numeric not null,
-  date date not null,
-  notes text,
-  created_at timestamptz not null default now()
-);
-
--- Indexes
-create index foods_user_id_idx on public.foods (user_id);
-create index foods_name_idx on public.foods (user_id, name);
-create index food_logs_user_date_idx on public.food_logs (user_id, date);
-create index weight_entries_user_date_idx on public.weight_entries (user_id, date desc);
-
--- Default food library seeded for every new user (see seed-foods.sql for full list)
--- Keep in sync with public.seed_default_foods in seed-foods.sql
 create or replace function public.seed_default_foods(p_user_id uuid)
 returns void
 language plpgsql
@@ -76,6 +13,7 @@ security definer
 set search_path = public
 as $$
 begin
+  -- Avoid double-seeding if called more than once
   if exists (select 1 from public.foods where user_id = p_user_id limit 1) then
     return;
   end if;
@@ -83,6 +21,7 @@ begin
   insert into public.foods
     (user_id, name, serving_size, serving_unit, protein, carbs, fats, calories, category)
   values
+    -- ========== CARBS ==========
     (p_user_id, 'קוואקר', 100, 'grams', 11, 60, 8, 337, 'carbs'),
     (p_user_id, 'דבש', 100, 'grams', 0, 80, 0, 320, 'carbs'),
     (p_user_id, 'חלב שקדים', 100, 'grams', 0.5, 3, 1.1, 24, 'carbs'),
@@ -109,6 +48,8 @@ begin
     (p_user_id, 'חלב 3%', 100, 'grams', 3.3, 5, 3, 60, 'carbs'),
     (p_user_id, 'אטריות', 100, 'grams', 7, 49.3, 1.1, 221, 'carbs'),
     (p_user_id, 'פסטה אסם', 100, 'grams', 5, 32.3, 0.7, 161, 'carbs'),
+
+    -- ========== PROTEIN ==========
     (p_user_id, 'פסטרמה', 100, 'grams', 16, 5, 3, 111, 'protein'),
     (p_user_id, 'טונה סטארקיסט', 100, 'grams', 25, 0, 4.5, 140, 'protein'),
     (p_user_id, 'בשר עוף מבושל', 100, 'grams', 27, 0, 6.7, 177, 'protein'),
@@ -122,6 +63,8 @@ begin
     (p_user_id, 'קוטג'' 9%', 100, 'grams', 10.5, 1.2, 9, 128, 'protein'),
     (p_user_id, 'גבינה צהובה', 100, 'grams', 22, 0, 28, 340, 'protein'),
     (p_user_id, 'ביצה קשה', 100, 'grams', 12.58, 1.2, 10.6, 155, 'protein'),
+
+    -- ========== FRUITS ==========
     (p_user_id, 'בננה', 100, 'grams', 0, 23, 0, 89, 'fruits'),
     (p_user_id, 'תפוח עץ', 100, 'grams', 0, 14, 0, 54, 'fruits'),
     (p_user_id, 'אגס', 100, 'grams', 0, 15, 0, 57, 'fruits'),
@@ -132,6 +75,8 @@ begin
     (p_user_id, 'מיקס פירות', 100, 'grams', 1.2, 7.9, 0, 48, 'fruits'),
     (p_user_id, 'תות', 100, 'grams', 0, 4.9, 0, 32, 'fruits'),
     (p_user_id, 'ברוקולי', 100, 'grams', 2.38, 7.18, 0.41, 35, 'fruits'),
+
+    -- ========== FATS ==========
     (p_user_id, 'חמאת בוטנים', 100, 'grams', 28, 16, 53, 619, 'fats'),
     (p_user_id, 'אגוזי מלך', 100, 'grams', 15, 14, 65, 654, 'fats'),
     (p_user_id, 'שמן זית', 100, 'grams', 0, 0, 91, 822, 'fats'),
@@ -148,11 +93,12 @@ begin
 end;
 $$;
 
--- Auto-create profile + default foods on signup
+-- Create profile + default food library on signup
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
-security definer set search_path = public
+security definer
+set search_path = public
 as $$
 begin
   insert into public.profiles (id, email, name)
@@ -168,27 +114,9 @@ begin
 end;
 $$;
 
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute function public.handle_new_user();
-
--- Row Level Security
-alter table public.profiles enable row level security;
-alter table public.foods enable row level security;
-alter table public.food_logs enable row level security;
-alter table public.weight_entries enable row level security;
-
-create policy "Users can view own profile"
-  on public.profiles for select using (auth.uid() = id);
-
-create policy "Users can update own profile"
-  on public.profiles for update using (auth.uid() = id);
-
-create policy "Users can manage own foods"
-  on public.foods for all using (auth.uid() = user_id);
-
-create policy "Users can manage own food logs"
-  on public.food_logs for all using (auth.uid() = user_id);
-
-create policy "Users can manage own weight entries"
-  on public.weight_entries for all using (auth.uid() = user_id);
+-- Backfill existing users who have no foods yet
+select public.seed_default_foods(id)
+from auth.users u
+where not exists (
+  select 1 from public.foods f where f.user_id = u.id
+);
