@@ -1,5 +1,6 @@
 // src/hooks/queries.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useHistory } from "react-router-dom";
 import type {
   CreateFoodInput,
   CreateFoodLogInput,
@@ -47,6 +48,7 @@ type AuthResult = {
 
 export function useLoginMutation(isRegister: boolean) {
   const qc = useQueryClient();
+  const history = useHistory();
   const setUser = useAuthStore((s) => s.setUser);
 
   return useMutation<
@@ -78,6 +80,7 @@ export function useLoginMutation(isRegister: boolean) {
       };
 
       setUser(minimalUser);
+      history.replace("/tabs/diary");
 
       try {
         const profile = await qc.fetchQuery({

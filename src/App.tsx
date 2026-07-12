@@ -56,6 +56,16 @@ const labelStyle = (color: string): React.CSSProperties => ({
   marginTop: "4px",
 });
 
+const AuthenticatedRoutes: React.FC = () => {
+  const { pathname } = useLocation();
+
+  if (!pathname.startsWith("/tabs")) {
+    return <Redirect to="/tabs/diary" />;
+  }
+
+  return <MainTabs />;
+};
+
 const MainTabs: React.FC = () => {
   const { pathname } = useLocation();
   const { openAddFood, openAddWeight, openAddFoodLibrary } = useUIStore();
@@ -187,7 +197,7 @@ const App: React.FC = () => {
             </Route>
           </IonRouterOutlet>
         ) : (
-          <MainTabs />
+          <AuthenticatedRoutes />
         )}
       </IonReactRouter>
     </IonApp>
