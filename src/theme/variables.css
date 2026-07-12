@@ -75,13 +75,18 @@ ion-tab-bar {
   contain: none !important;
 }
 
-/* Full-height sheet modals */
+/* Full-height sheet modals — stop below Dynamic Island / notch */
 ion-modal.app-modal {
-  --height: 100%;
+  --height: calc(100% - var(--ion-safe-area-top, 0px));
+  --max-height: calc(100% - var(--ion-safe-area-top, 0px));
   --border-radius: 20px 20px 0 0;
   align-items: flex-end;
 }
 
 ion-modal.app-modal::part(content) {
   border-radius: 20px 20px 0 0;
+}
+
+ion-modal.app-modal ion-content {
+  --padding-bottom: var(--ion-safe-area-bottom, 0px);
 }

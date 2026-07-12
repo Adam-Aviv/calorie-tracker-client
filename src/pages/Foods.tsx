@@ -39,8 +39,8 @@ const Foods: React.FC = () => {
     protein: 0,
     carbs: 0,
     fats: 0,
-    servingSize: 1,
-    servingUnit: "serving",
+    servingSize: 100,
+    servingUnit: "grams",
     category: "other",
   });
 
@@ -339,7 +339,7 @@ const Foods: React.FC = () => {
                       onChange={(e) =>
                         setForm({
                           ...form,
-                          servingSize: parseFloat(e.target.value) || 1,
+                          servingSize: parseFloat(e.target.value) || 100,
                         })
                       }
                     />
