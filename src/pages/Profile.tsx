@@ -368,7 +368,28 @@ const SettingSelectRow = ({
   </IonItem>
 );
 
-const MetricInput = ({ icon, label, value, unit, onChange }: any) => (
+interface MetricInputProps {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  unit: string;
+  onChange: (value: number) => void;
+}
+
+interface MacroBoxProps {
+  label: string;
+  value: number;
+  color: string;
+  onChange: (value: number) => void;
+}
+
+const MetricInput = ({
+  icon,
+  label,
+  value,
+  unit,
+  onChange,
+}: MetricInputProps) => (
   <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex flex-col gap-1 focus-within:border-indigo-500 transition-all">
     <div className="flex items-center gap-2 text-slate-400">
       {icon}
@@ -388,7 +409,7 @@ const MetricInput = ({ icon, label, value, unit, onChange }: any) => (
   </div>
 );
 
-const MacroBox = ({ label, value, color, onChange }: any) => (
+const MacroBox = ({ label, value, color, onChange }: MacroBoxProps) => (
   <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm text-center space-y-1 focus-within:ring-2 focus-within:ring-slate-100 transition-all">
     <div className={`w-2 h-2 rounded-full mx-auto ${color}`} />
     <p className="text-[10px] font-black uppercase text-slate-400">{label}</p>

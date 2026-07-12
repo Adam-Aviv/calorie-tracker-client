@@ -19,23 +19,31 @@ const AddFoodModal: React.FC = () => {
 
   const [searchText, setSearchText] = useState("");
   const [selectedFood, setSelectedFood] = useState<Food | null>(null);
-  const [servings, setServings] = useState(1);
+  const [amount, setAmount] = useState(100);
   const [notes, setNotes] = useState("");
 
   const foodsQuery = useFoodsQuery({ search: searchText }, showAddFood);
   const createLogMut = useCreateLogMutation();
   const foods = foodsQuery.data || [];
 
+  const selectFood = (food: Food) => {
+    setSelectedFood(food);
+    setAmount(food.servingSize);
+  };
+
   const handleClose = () => {
     closeAddFood();
     setSearchText("");
     setSelectedFood(null);
-    setServings(1);
+    setAmount(100);
     setNotes("");
   };
 
   const handleAdd = async () => {
     if (!selectedFood) return;
+
+    const servings =
+      selectedFood.servingSize > 0 ? amount / selectedFood.servingSize : 1;
 
     await createLogMut.mutateAsync({
       date,
@@ -50,6 +58,13 @@ const AddFoodModal: React.FC = () => {
 
     handleClose();
   };
+
+  const totalCalories = selectedFood
+    ? Math.round(
+        selectedFood.calories *
+          (selectedFood.servingSize > 0 ? amount / selectedFood.servingSize : 1)
+      )
+    : 0;
 
   return (
     <IonModal
@@ -99,7 +114,7 @@ const AddFoodModal: React.FC = () => {
                 <FoodCard
                   key={food.id}
                   food={food}
-                  onClick={() => setSelectedFood(food)}
+                  onClick={() => selectFood(food)}
                 />
               ))}
             </div>
@@ -110,7 +125,11 @@ const AddFoodModal: React.FC = () => {
                   {selectedFood.name}
                 </h3>
                 <p className="text-indigo-400 text-xs font-bold uppercase tracking-widest">
-                  {Math.round(selectedFood.calories * servings)} Total Calories
+                  {totalCalories} Total Calories
+                </p>
+                <p className="text-indigo-300 text-[10px] font-bold mt-1">
+                  Per {selectedFood.servingSize} {selectedFood.servingUnit}:{" "}
+                  {Math.round(selectedFood.calories)} cal
                 </p>
                 <Zap className="absolute -right-4 -bottom-4 text-indigo-200/50 w-24 h-24" />
               </div>
@@ -122,14 +141,17 @@ const AddFoodModal: React.FC = () => {
                   </div>
                   <div className="flex-1">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                      Number of Servings
+                      Amount ({selectedFood.servingUnit})
                     </p>
                     <input
                       type="number"
-                      step="0.5"
+                      step="any"
+                      min="0"
                       className="w-full bg-transparent font-black text-xl outline-none"
-                      value={servings}
-                      onChange={(e) => setServings(parseFloat(e.target.value))}
+                      value={amount}
+                      onChange={(e) =>
+                        setAmount(parseFloat(e.target.value) || 0)
+                      }
                     />
                   </div>
                 </div>
