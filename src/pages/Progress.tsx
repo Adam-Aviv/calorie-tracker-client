@@ -70,7 +70,14 @@ const Progress: React.FC = () => {
   return (
     <IonPage>
       <IonHeader className="ion-no-border">
-        <IonToolbar className="--background: transparent; pt-4 px-4">
+        <IonToolbar
+          className="--background: transparent; pt-4"
+          style={{
+            "--padding-start": "12px",
+            "--padding-end": "12px",
+            paddingTop: "var(--ion-safe-area-top)",
+          }}
+        >
           <IonTitle className="text-2xl font-black text-slate-900 px-0">
             Progress
           </IonTitle>
@@ -82,7 +89,7 @@ const Progress: React.FC = () => {
           <IonRefresherContent />
         </IonRefresher>
 
-        <div className="p-6 space-y-6">
+        <div className="px-3 py-4 space-y-6">
           {/* 1. HERO CHART CARD */}
           <div className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-100 overflow-hidden">
             <div className="flex justify-between items-start mb-6">

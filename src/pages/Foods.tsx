@@ -4,10 +4,6 @@ import {
   IonPage,
   IonHeader,
   IonToolbar,
-  IonItem,
-  IonItemSliding,
-  IonItemOptions,
-  IonItemOption,
   IonLoading,
   IonRefresher,
   IonRefresherContent,
@@ -15,14 +11,11 @@ import {
   RefresherEventDetail,
 } from "@ionic/react";
 import {
-  Trash2,
-  Edit3,
   Search,
-  Utensils,
-  Zap,
   X,
   Layers,
   Save,
+  Zap,
 } from "lucide-react";
 import type { Food } from "../types";
 import {
@@ -33,6 +26,7 @@ import {
 } from "../hooks/queries";
 import { useQueryClient } from "@tanstack/react-query";
 import AppButton from "../components/AppButton";
+import FoodSwipeCard from "../components/FoodSwipeCard";
 
 const Foods: React.FC = () => {
   const qc = useQueryClient();
@@ -114,7 +108,14 @@ const Foods: React.FC = () => {
   return (
     <IonPage>
       <IonHeader className="ion-no-border">
-        <IonToolbar className="--background: #fff; pt-4 px-4">
+        <IonToolbar
+          className="--background: #fff; pt-4"
+          style={{
+            "--padding-start": "12px",
+            "--padding-end": "12px",
+            paddingTop: "var(--ion-safe-area-top)",
+          }}
+        >
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-black text-slate-900">Food Library</h1>
           </div>
@@ -139,7 +140,7 @@ const Foods: React.FC = () => {
           <IonRefresherContent />
         </IonRefresher>
 
-        <div className="px-6 pt-4 pb-2">
+        <div className="px-3 pt-4 pb-2">
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar">
             {categories.map((cat) => {
               const isActive = categoryFilter === cat;
@@ -170,70 +171,15 @@ const Foods: React.FC = () => {
           </div>
         </div>
 
-        <div className="px-6 pb-4">
+        <div className="px-3 pb-4">
           <div className="flex flex-col gap-3">
             {foods.map((food) => (
-              <IonItemSliding key={food.id}>
-                <IonItem
-                  lines="none"
-                  className="--background: transparent --padding-start: 0 --inner-padding-end: 0"
-                >
-                  <div className="w-full bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between group active:bg-slate-50 transition-all">
-                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                      <div className="w-12 h-12 flex-shrink-0 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-500">
-                        <Utensils size={20} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3
-                          className="font-semibold text-slate-900 capitalize truncate"
-                          style={{ fontSize: "14px" }}
-                        >
-                          {food.name}
-                        </h3>
-                        <p
-                          className="font-black text-slate-400 uppercase tracking-widest truncate"
-                          style={{ fontSize: "9px" }}
-                        >
-                          {food.servingSize} {food.servingUnit} •{" "}
-                          {food.category}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end flex-shrink-0 ml-2">
-                      <div className="flex items-center gap-1 text-indigo-600 font-black">
-                        <Zap size={14} fill="currentColor" />
-                        <span>{Math.round(food.calories)}</span>
-                      </div>
-                      <div className="flex gap-2 mt-1">
-                        <span className="text-[9px] font-bold text-slate-400">
-                          P: {food.protein}g
-                        </span>
-                        <span className="text-[9px] font-bold text-slate-400">
-                          C: {food.carbs}g
-                        </span>
-                        <span className="text-[9px] font-bold text-slate-400">
-                          F: {food.fats}g
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </IonItem>
-
-                <IonItemOptions side="end">
-                  <IonItemOption
-                    onClick={() => openEditModal(food)}
-                    className="bg-slate-100 !text-slate-600 rounded-2xl ml-2"
-                  >
-                    <Edit3 size={20} />
-                  </IonItemOption>
-                  <IonItemOption
-                    onClick={() => deleteFoodMut.mutate(food.id)}
-                    className="bg-rose-500 rounded-2xl ml-2"
-                  >
-                    <Trash2 size={20} />
-                  </IonItemOption>
-                </IonItemOptions>
-              </IonItemSliding>
+              <FoodSwipeCard
+                key={food.id}
+                food={food}
+                onEdit={() => openEditModal(food)}
+                onDelete={() => deleteFoodMut.mutate(food.id)}
+              />
             ))}
           </div>
         </div>

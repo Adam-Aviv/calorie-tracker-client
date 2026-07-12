@@ -81,8 +81,12 @@ const Diary: React.FC = () => {
     <IonPage>
       <IonHeader className="ion-no-border">
         <IonToolbar
-          className="--background: transparent; pt-4 px-4"
-          style={{ paddingTop: "var(--ion-safe-area-top)" }}
+          className="--background: transparent; pt-4"
+          style={{
+            "--padding-start": "12px",
+            "--padding-end": "12px",
+            paddingTop: "var(--ion-safe-area-top)",
+          }}
         >
           <div className="flex items-center justify-between w-full">
             <button
@@ -130,66 +134,68 @@ const Diary: React.FC = () => {
           <IonRefresherContent />
         </IonRefresher>
 
-        <div className="p-6">
-          {/* CALORIE RING */}
-          <div className="relative h-64 w-full flex items-center justify-center mb-8">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-52 h-52 rounded-full border-12 border-white shadow-sm" />
-              <svg
-                className="absolute w-52 h-52 -rotate-90"
-                viewBox="0 0 208 208"
-              >
-                <circle
-                  cx="104"
-                  cy="104"
-                  r="96"
-                  fill="transparent"
-                  stroke="#4f46e5"
-                  strokeWidth="12"
-                  strokeDasharray={2 * Math.PI * 96}
-                  strokeDashoffset={
-                    2 *
-                    Math.PI *
-                    96 *
-                    (1 - Math.min(caloriesConsumed / goals.calories, 1))
-                  }
-                  strokeLinecap="round"
-                  className="transition-all duration-1000"
-                />
-              </svg>
+        <div className="px-3 py-4 space-y-4">
+          <div className="bg-white rounded-4xl border border-slate-100 shadow-sm overflow-hidden p-5">
+            {/* CALORIE RING */}
+            <div className="relative h-56 w-full flex items-center justify-center mb-6">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-52 h-52 rounded-full border-12 border-slate-50 shadow-sm" />
+                <svg
+                  className="absolute w-52 h-52 -rotate-90"
+                  viewBox="0 0 208 208"
+                >
+                  <circle
+                    cx="104"
+                    cy="104"
+                    r="96"
+                    fill="transparent"
+                    stroke="#4f46e5"
+                    strokeWidth="12"
+                    strokeDasharray={2 * Math.PI * 96}
+                    strokeDashoffset={
+                      2 *
+                      Math.PI *
+                      96 *
+                      (1 - Math.min(caloriesConsumed / goals.calories, 1))
+                    }
+                    strokeLinecap="round"
+                    className="transition-all duration-1000"
+                  />
+                </svg>
+              </div>
+              <div className="text-center z-10">
+                <h2 className="text-5xl font-black text-slate-900 leading-none">
+                  {caloriesConsumed}
+                </h2>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-2">
+                  Calories Consumed
+                </p>
+                <p className="text-xs font-bold text-slate-400 mt-1">
+                  {caloriesLeft} left
+                </p>
+              </div>
             </div>
-            <div className="text-center z-10">
-              <h2 className="text-5xl font-black text-slate-900 leading-none">
-                {caloriesConsumed}
-              </h2>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-2">
-                Calories Consumed
-              </p>
-              <p className="text-xs font-bold text-slate-400 mt-1">
-                {caloriesLeft} left
-              </p>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-3 gap-4 mb-10">
-            <MacroBar
-              label="Protein"
-              current={summary.totalProtein}
-              goal={goals.protein}
-              colorClass="bg-emerald-500"
-            />
-            <MacroBar
-              label="Carbs"
-              current={summary.totalCarbs}
-              goal={goals.carbs}
-              colorClass="bg-amber-500"
-            />
-            <MacroBar
-              label="Fats"
-              current={summary.totalFats}
-              goal={goals.fats}
-              colorClass="bg-rose-500"
-            />
+            <div className="grid grid-cols-3 gap-4">
+              <MacroBar
+                label="Protein"
+                current={summary.totalProtein}
+                goal={goals.protein}
+                colorClass="bg-emerald-500"
+              />
+              <MacroBar
+                label="Carbs"
+                current={summary.totalCarbs}
+                goal={goals.carbs}
+                colorClass="bg-amber-500"
+              />
+              <MacroBar
+                label="Fats"
+                current={summary.totalFats}
+                goal={goals.fats}
+                colorClass="bg-rose-500"
+              />
+            </div>
           </div>
 
           <div className="space-y-4">

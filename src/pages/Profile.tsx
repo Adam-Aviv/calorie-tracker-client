@@ -119,7 +119,14 @@ const Profile: React.FC = () => {
   return (
     <IonPage>
       <IonHeader className="ion-no-border">
-        <IonToolbar className="--background: transparent; pt-4 px-4">
+        <IonToolbar
+          className="--background: transparent; pt-4"
+          style={{
+            "--padding-start": "12px",
+            "--padding-end": "12px",
+            paddingTop: "var(--ion-safe-area-top)",
+          }}
+        >
           <IonTitle className="text-2xl font-black text-slate-900 px-0">
             Settings
           </IonTitle>
@@ -127,7 +134,7 @@ const Profile: React.FC = () => {
       </IonHeader>
 
       <IonContent className="--background: #f8fafc;">
-        <div className="p-6 space-y-8 max-w-2xl mx-auto">
+        <div className="px-3 py-4 space-y-8">
           {/* Section: Profile Header */}
           <div className="flex items-center gap-4 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
             <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-100">

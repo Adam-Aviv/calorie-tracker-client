@@ -1,11 +1,17 @@
 import React, { useState } from "react";
-import { IonModal, IonContent, IonLoading } from "@ionic/react";
+import {
+  IonModal,
+  IonContent,
+  IonHeader,
+  IonLoading,
+} from "@ionic/react";
 import { Search, X, Zap, Hash, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import type { Food } from "../types";
 import { useFoodsQuery, useCreateLogMutation } from "../hooks/queries";
 import { useUIStore } from "../store/uiStore";
 import AppButton from "./AppButton";
+import FoodCard from "./FoodCard";
 
 const AddFoodModal: React.FC = () => {
   const { showAddFood, closeAddFood, selectedMealType } = useUIStore();
@@ -49,64 +55,56 @@ const AddFoodModal: React.FC = () => {
     <IonModal
       isOpen={showAddFood}
       onDidDismiss={handleClose}
-      initialBreakpoint={1}
-      breakpoints={[0, 1]}
       className="app-modal"
     >
-      <IonContent className="--background: #fff;">
-        <div className="p-6 h-full flex flex-col">
-          <div className="flex justify-between items-center mb-6">
+      <IonHeader className="ion-no-border">
+        <div className="px-3 pt-6 pb-4" style={{ background: "#f8fafc" }}>
+          <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-black text-slate-900 capitalize">
               Add {selectedMealType}
             </h2>
             <button
               onClick={handleClose}
-              className="p-2 bg-slate-100 rounded-full text-slate-400"
+              className="p-2 bg-white rounded-full text-slate-400 border border-slate-100"
             >
               <X size={20} />
             </button>
           </div>
 
-          {!selectedFood ? (
-            <div className="space-y-6 flex-1 flex flex-col overflow-hidden">
-              <div className="relative">
-                <Search
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                  size={18}
-                />
-                <input
-                  className="w-full h-14 bg-slate-50 rounded-2xl pl-12 pr-4 font-bold text-slate-900 border-2 border-transparent focus:border-indigo-500 transition-all outline-none"
-                  placeholder="Search for a food..."
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                />
-              </div>
+          {!selectedFood && (
+            <div className="relative">
+              <Search
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                size={18}
+              />
+              <input
+                className="w-full h-12 bg-white rounded-2xl pl-12 pr-4 font-bold text-slate-900 border-2 border-transparent focus:border-indigo-500 outline-none transition-all"
+                placeholder="Search for a food..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+            </div>
+          )}
+        </div>
+      </IonHeader>
 
-              <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-                {foods.map((food) => (
-                  <button
-                    key={food.id}
-                    onClick={() => setSelectedFood(food)}
-                    className="w-full p-4 bg-white border border-slate-100 rounded-3xl flex items-center justify-between shadow-sm active:bg-slate-50 transition-all"
-                  >
-                    <div className="text-left">
-                      <p className="font-bold text-slate-900 uppercase tracking-tight text-sm">
-                        {food.name}
-                      </p>
-                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
-                        {food.servingSize} {food.servingUnit}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1 text-indigo-600 font-black">
-                      <Zap size={14} fill="currentColor" />{" "}
-                      {Math.round(food.calories)}
-                    </div>
-                  </button>
-                ))}
-              </div>
+      <IonContent
+        scrollY
+        style={{ "--background": "#f8fafc" } as React.CSSProperties}
+      >
+        <div className="px-3 pb-8 pt-2">
+          {!selectedFood ? (
+            <div className="flex flex-col gap-3">
+              {foods.map((food) => (
+                <FoodCard
+                  key={food.id}
+                  food={food}
+                  onClick={() => setSelectedFood(food)}
+                />
+              ))}
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-8 pt-2">
               <div className="bg-indigo-50 p-6 rounded-4xl text-center relative overflow-hidden">
                 <h3 className="text-indigo-900 font-black text-xl mb-1">
                   {selectedFood.name}
