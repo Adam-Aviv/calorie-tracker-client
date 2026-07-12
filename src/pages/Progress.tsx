@@ -10,8 +10,8 @@ import {
   IonRefresherContent,
   RefresherEventDetail,
 } from "@ionic/react";
-import { TrendingDown, Calendar, History, Trash2 } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { TrendingDown, TrendingUp, Calendar, History, Trash2 } from "lucide-react";
+import { format, parseISO, startOfMonth, isBefore } from "date-fns";
 import {
   AreaChart,
   Area,
@@ -36,11 +36,19 @@ const Progress: React.FC = () => {
   const createMut = useCreateWeightMutation();
   const deleteMut = useDeleteWeightMutation();
 
-  const weights = useMemo(
-    () => [...(weightsQuery.data || [])].reverse(),
-    [weightsQuery.data]
-  );
-  const latestWeight = weights[weights.length - 1]?.weight || 0;
+  const weights = useMemo(() => weightsQuery.data ?? [], [weightsQuery.data]);
+  const latestWeight = weights[weights.length - 1]?.weight ?? 0;
+
+  const monthlyChange = useMemo(() => {
+    const monthStart = startOfMonth(new Date());
+    const thisMonth = weights.filter(
+      (w) => !isBefore(parseISO(w.date), monthStart)
+    );
+
+    if (thisMonth.length < 2) return null;
+
+    return thisMonth[thisMonth.length - 1].weight - thisMonth[0].weight;
+  }, [weights]);
 
   // Chart Data Formatting
   const chartData = useMemo(() => {
@@ -89,9 +97,22 @@ const Progress: React.FC = () => {
                   <span className="text-slate-400 font-bold">kg</span>
                 </div>
               </div>
-              <div className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-xs font-black flex items-center gap-1">
-                <TrendingDown size={14} /> 2.4kg this month
-              </div>
+              {monthlyChange !== null && (
+                <div
+                  className={`px-3 py-1 rounded-full text-xs font-black flex items-center gap-1 ${
+                    monthlyChange <= 0
+                      ? "bg-emerald-50 text-emerald-600"
+                      : "bg-amber-50 text-amber-600"
+                  }`}
+                >
+                  {monthlyChange <= 0 ? (
+                    <TrendingDown size={14} />
+                  ) : (
+                    <TrendingUp size={14} />
+                  )}
+                  {Math.abs(monthlyChange).toFixed(1)} kg this month
+                </div>
+              )}
             </div>
 
             <div className="h-64 w-full -ml-4">
