@@ -4,6 +4,11 @@ import { X, Zap, Layers, PlusCircle } from "lucide-react";
 import { apiErrorMessage, useCreateFoodMutation } from "../hooks/queries";
 import { useUIStore } from "../store/uiStore";
 import AppButton from "./AppButton";
+import {
+  formatDecimalField,
+  isValidDecimalInput,
+  parseDecimalInput,
+} from "../utils/numberInput";
 
 const CATEGORIES = [
   "protein",
@@ -19,11 +24,11 @@ const CATEGORIES = [
 
 const emptyForm = {
   name: "",
-  calories: 0,
-  protein: 0,
-  carbs: 0,
-  fats: 0,
-  servingSize: 100,
+  calories: "",
+  protein: "",
+  carbs: "",
+  fats: "",
+  servingSize: "100",
   servingUnit: "grams",
   category: "other",
 };
@@ -46,7 +51,16 @@ const AddFoodLibraryModal: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      await createFoodMut.mutateAsync(form);
+      await createFoodMut.mutateAsync({
+        name: form.name,
+        calories: parseDecimalInput(form.calories),
+        protein: parseDecimalInput(form.protein),
+        carbs: parseDecimalInput(form.carbs),
+        fats: parseDecimalInput(form.fats),
+        servingSize: parseDecimalInput(form.servingSize, 100),
+        servingUnit: form.servingUnit,
+        category: form.category,
+      });
       handleClose();
     } catch (e) {
       alert(apiErrorMessage(e, "Failed to save food"));
@@ -93,15 +107,17 @@ const AddFoodLibraryModal: React.FC = () => {
                     <Zap size={10} /> Calories
                   </p>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     className="w-full bg-transparent font-black text-lg outline-none"
                     value={form.calories}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        calories: parseFloat(e.target.value) || 0,
-                      })
-                    }
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      if (isValidDecimalInput(next)) {
+                        setForm({ ...form, calories: next });
+                      }
+                    }}
+                    placeholder="0"
                   />
                 </div>
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
@@ -134,15 +150,17 @@ const AddFoodLibraryModal: React.FC = () => {
                       {macro}
                     </p>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       className="w-full bg-transparent font-black text-center outline-none"
                       value={form[macro]}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          [macro]: parseFloat(e.target.value) || 0,
-                        })
-                      }
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        if (isValidDecimalInput(next)) {
+                          setForm({ ...form, [macro]: next });
+                        }
+                      }}
+                      placeholder="0"
                     />
                   </div>
                 ))}
@@ -154,15 +172,16 @@ const AddFoodLibraryModal: React.FC = () => {
                     Serving Size
                   </p>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     className="w-full bg-transparent font-black text-lg outline-none"
                     value={form.servingSize}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        servingSize: parseFloat(e.target.value) || 100,
-                      })
-                    }
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      if (isValidDecimalInput(next)) {
+                        setForm({ ...form, servingSize: next });
+                      }
+                    }}
                   />
                 </div>
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
@@ -184,7 +203,9 @@ const AddFoodLibraryModal: React.FC = () => {
             <AppButton
               onClick={handleSubmit}
               disabled={
-                !form.name || form.calories <= 0 || createFoodMut.isPending
+                !form.name ||
+                parseDecimalInput(form.calories) <= 0 ||
+                createFoodMut.isPending
               }
             >
               <PlusCircle size={20} />

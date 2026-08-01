@@ -63,6 +63,8 @@ export interface FoodLog {
   carbs: number;
   fats: number;
   foodName: string;
+  servingSize?: number;
+  servingUnit?: string;
   notes?: string;
 }
 

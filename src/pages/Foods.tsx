@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   IonContent,
   IonPage,
@@ -10,13 +10,7 @@ import {
   IonModal,
   RefresherEventDetail,
 } from "@ionic/react";
-import {
-  Search,
-  X,
-  Layers,
-  Save,
-  Zap,
-} from "lucide-react";
+import { Search, X, Layers, Save, Zap } from "lucide-react";
 import type { Food } from "../types";
 import {
   apiErrorMessage,
@@ -27,6 +21,23 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import AppButton from "../components/AppButton";
 import FoodSwipeCard from "../components/FoodSwipeCard";
+import { filterFoods } from "../utils/foods";
+import {
+  formatDecimalField,
+  isValidDecimalInput,
+  parseDecimalInput,
+} from "../utils/numberInput";
+
+const emptyFoodForm = {
+  name: "",
+  calories: "",
+  protein: "",
+  carbs: "",
+  fats: "",
+  servingSize: "100",
+  servingUnit: "grams",
+  category: "other",
+};
 
 const Foods: React.FC = () => {
   const qc = useQueryClient();
@@ -35,32 +46,23 @@ const Foods: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingFood, setEditingFood] = useState<Food | null>(null);
 
-  // Form state
-  const [form, setForm] = useState({
-    name: "",
-    calories: 0,
-    protein: 0,
-    carbs: 0,
-    fats: 0,
-    servingSize: 100,
-    servingUnit: "grams",
-    category: "other",
-  });
+  const [form, setForm] = useState(emptyFoodForm);
 
-  const foodsQuery = useFoodsQuery(
-    {
-      search: searchText,
-      category: categoryFilter === "all" ? undefined : categoryFilter,
-    },
-    true,
-  );
-
+  const foodsQuery = useFoodsQuery();
   const updateFoodMut = useUpdateFoodMutation();
   const deleteFoodMut = useDeleteFoodMutation();
 
   const loading =
     foodsQuery.isFetching || updateFoodMut.isPending || deleteFoodMut.isPending;
-  const foods = foodsQuery.data || [];
+
+  const foods = useMemo(
+    () =>
+      filterFoods(foodsQuery.data ?? [], {
+        search: searchText,
+        category: categoryFilter === "all" ? undefined : categoryFilter,
+      }),
+    [foodsQuery.data, searchText, categoryFilter],
+  );
 
   const handleRefresh = async (e: CustomEvent<RefresherEventDetail>) => {
     await qc.invalidateQueries({ queryKey: ["foods"] });
@@ -71,11 +73,11 @@ const Foods: React.FC = () => {
     setEditingFood(food);
     setForm({
       name: food.name,
-      calories: food.calories,
-      protein: food.protein,
-      carbs: food.carbs,
-      fats: food.fats,
-      servingSize: food.servingSize,
+      calories: formatDecimalField(food.calories),
+      protein: formatDecimalField(food.protein),
+      carbs: formatDecimalField(food.carbs),
+      fats: formatDecimalField(food.fats),
+      servingSize: formatDecimalField(food.servingSize),
       servingUnit: food.servingUnit,
       category: food.category || "other",
     });
@@ -85,7 +87,19 @@ const Foods: React.FC = () => {
   const handleSubmit = async () => {
     if (!editingFood) return;
     try {
-      await updateFoodMut.mutateAsync({ id: editingFood.id, updates: form });
+      await updateFoodMut.mutateAsync({
+        id: editingFood.id,
+        updates: {
+          name: form.name,
+          calories: parseDecimalInput(form.calories),
+          protein: parseDecimalInput(form.protein),
+          carbs: parseDecimalInput(form.carbs),
+          fats: parseDecimalInput(form.fats),
+          servingSize: parseDecimalInput(form.servingSize, 100),
+          servingUnit: form.servingUnit,
+          category: form.category,
+        },
+      });
       setShowModal(false);
     } catch (e) {
       alert(apiErrorMessage(e, "Failed to save food"));
@@ -225,15 +239,16 @@ const Foods: React.FC = () => {
                       <Zap size={10} /> Calories
                     </p>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       className="w-full bg-transparent font-black text-lg outline-none"
                       value={form.calories}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          calories: parseFloat(e.target.value) || 0,
-                        })
-                      }
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        if (isValidDecimalInput(next)) {
+                          setForm({ ...form, calories: next });
+                        }
+                      }}
                     />
                   </div>
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
@@ -268,16 +283,16 @@ const Foods: React.FC = () => {
                         {macro}
                       </p>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         className="w-full bg-transparent font-black text-center outline-none"
-                        // Use type assertion to the specific key type
-                        value={form[macro as keyof typeof form]}
-                        onChange={(e) =>
-                          setForm({
-                            ...form,
-                            [macro]: parseFloat(e.target.value) || 0,
-                          })
-                        }
+                        value={form[macro]}
+                        onChange={(e) => {
+                          const next = e.target.value;
+                          if (isValidDecimalInput(next)) {
+                            setForm({ ...form, [macro]: next });
+                          }
+                        }}
                       />
                     </div>
                   ))}
@@ -289,15 +304,16 @@ const Foods: React.FC = () => {
                       Serving Size
                     </p>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       className="w-full bg-transparent font-black text-lg outline-none"
                       value={form.servingSize}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          servingSize: parseFloat(e.target.value) || 100,
-                        })
-                      }
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        if (isValidDecimalInput(next)) {
+                          setForm({ ...form, servingSize: next });
+                        }
+                      }}
                     />
                   </div>
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
@@ -318,7 +334,11 @@ const Foods: React.FC = () => {
 
               <AppButton
                 onClick={handleSubmit}
-                disabled={!form.name || form.calories <= 0 || loading}
+                disabled={
+                  !form.name ||
+                  parseDecimalInput(form.calories) <= 0 ||
+                  loading
+                }
               >
                 <Save size={20} />
                 Update Food

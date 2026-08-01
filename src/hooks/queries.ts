@@ -24,8 +24,7 @@ export const qk = {
   me: ["auth", "me"] as const,
   profile: ["users", "profile"] as const,
 
-  foods: (search?: string, category?: string) =>
-    ["foods", { search: search || "", category: category || "" }] as const,
+  foods: ["foods", "all"] as const,
   food: (id: string) => ["foods", "byId", id] as const,
 
   daily: (date: string) => ["logs", "daily", date] as const,
@@ -130,13 +129,10 @@ export function useCalculateTDEEMutation() {
 }
 
 // -------------------- FOODS --------------------
-export function useFoodsQuery(
-  params?: { search?: string; category?: string },
-  enabled = true
-) {
+export function useFoodsQuery(enabled = true) {
   return useQuery<Food[]>({
-    queryKey: qk.foods(params?.search, params?.category),
-    queryFn: () => foodsAPI.getAll(params),
+    queryKey: qk.foods,
+    queryFn: () => foodsAPI.getAll(),
     enabled,
   });
 }

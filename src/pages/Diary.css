@@ -1,4 +1,50 @@
-/* Smooth accordion transitions */
-.transition-transform {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.diary-circle-btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 0 !important;
+  margin: 0;
+  border: none;
+  border-radius: 50% !important;
+  aspect-ratio: 1;
+  overflow: hidden;
+  line-height: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: transform 0.15s ease;
+}
+
+.diary-circle-btn:active {
+  transform: scale(0.92);
+}
+
+.diary-circle-btn--nav {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  max-width: 40px !important;
+  max-height: 40px !important;
+  background: #ffffff;
+  border: 1px solid #f1f5f9 !important;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+}
+
+.diary-circle-btn--add {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  background: #4f46e5;
+  color: #ffffff;
+}
+
+ion-toolbar .diary-circle-btn,
+ion-content .diary-circle-btn {
+  border-radius: 50% !important;
 }

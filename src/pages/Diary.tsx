@@ -7,7 +7,7 @@ import {
   IonRefresher,
   IonRefresherContent,
 } from "@ionic/react";
-import { ChevronLeft, ChevronRight, Plus, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Flame } from "lucide-react";
 import { format, parseISO, addDays, subDays } from "date-fns";
 import { useAuthStore } from "../store/authStore";
 import { useUIStore } from "../store/uiStore"; // Added UI Store
@@ -31,13 +31,7 @@ const Diary: React.FC = () => {
   );
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingLog, setEditingLog] = useState<FoodLog | null>(null);
-
-  const [expandedMeals, setExpandedMeals] = useState<string[]>([
-    "breakfast",
-    "lunch",
-    "dinner",
-    "snack",
-  ]);
+  const [expandedMeals, setExpandedMeals] = useState<string[]>([]);
 
   const dailyQuery = useDailyLogsQuery(currentDate, true);
   const deleteLogMut = useDeleteLogMutation();
@@ -90,12 +84,14 @@ const Diary: React.FC = () => {
         >
           <div className="flex items-center justify-between w-full">
             <button
+              type="button"
               onClick={() =>
                 setCurrentDate(
                   format(subDays(parseISO(currentDate), 1), "yyyy-MM-dd")
                 )
               }
-              className="p-2 bg-white rounded-xl shadow-sm border border-slate-100 active:scale-90 transition-all"
+              className="diary-circle-btn diary-circle-btn--nav"
+              aria-label="Previous day"
             >
               <ChevronLeft size={20} className="text-slate-600" />
             </button>
@@ -110,12 +106,14 @@ const Diary: React.FC = () => {
             </div>
 
             <button
+              type="button"
               onClick={() =>
                 setCurrentDate(
                   format(addDays(parseISO(currentDate), 1), "yyyy-MM-dd")
                 )
               }
-              className="p-2 bg-white rounded-xl shadow-sm border border-slate-100 active:scale-90 transition-all"
+              className="diary-circle-btn diary-circle-btn--nav"
+              aria-label="Next day"
             >
               <ChevronRight size={20} className="text-slate-600" />
             </button>
@@ -181,79 +179,92 @@ const Diary: React.FC = () => {
                 label="Protein"
                 current={summary.totalProtein}
                 goal={goals.protein}
-                colorClass="bg-emerald-500"
+                colorClass="bg-indigo-600"
               />
               <MacroBar
                 label="Carbs"
                 current={summary.totalCarbs}
                 goal={goals.carbs}
-                colorClass="bg-amber-500"
+                colorClass="bg-indigo-600"
               />
               <MacroBar
                 label="Fats"
                 current={summary.totalFats}
                 goal={goals.fats}
-                colorClass="bg-rose-500"
+                colorClass="bg-indigo-600"
               />
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {(["breakfast", "lunch", "dinner", "snack"] as const).map((mt) => {
               const mealLogs =
                 dailyData?.logs.filter((l) => l.mealType === mt) || [];
+              const mealCalories = Math.round(
+                dailyData?.summary.mealBreakdown[mt]?.calories ?? 0
+              );
               const isExpanded = expandedMeals.includes(mt);
+
               return (
                 <div
                   key={mt}
-                  className="bg-white rounded-4xl border border-slate-100 shadow-sm overflow-hidden transition-all"
+                  className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm"
                 >
-                  <button
-                    onClick={() => toggleMeal(mt)}
-                    className="w-full px-5 py-5 flex items-center justify-center relative active:bg-slate-50 transition-colors"
-                  >
-                    <span className="font-black text-slate-900 text-sm">
-                      {mealLabels[mt]}
-                    </span>
-                    <ChevronDown
-                      size={18}
-                      className={`absolute right-5 text-slate-300 transition-transform ${
-                        isExpanded ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
+                  <div className="flex items-center gap-2 px-4 py-4">
+                    <button
+                      type="button"
+                      onClick={() => toggleMeal(mt)}
+                      className="flex flex-1 min-w-0 text-left active:opacity-70 transition-opacity"
+                      aria-expanded={isExpanded}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-[17px] font-bold text-neutral-900 flex items-center gap-2 flex-wrap">
+                          {mealLabels[mt]}
+                          {mealCalories > 0 && (
+                            <span className="inline-flex items-center gap-1 text-indigo-600">
+                              <Flame size={15} fill="currentColor" />
+                              <span>{mealCalories}</span>
+                            </span>
+                          )}
+                        </h3>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openAddFood(mt, currentDate)}
+                      className="diary-circle-btn diary-circle-btn--add"
+                      aria-label={`Add food to ${mealLabels[mt]}`}
+                    >
+                      <Plus size={20} strokeWidth={2.5} />
+                    </button>
+                  </div>
 
-                  {isExpanded && (
-                    <div className="px-4 pb-4 space-y-2 border-t border-slate-50 pt-4">
-                      {mealLogs.length === 0 ? (
-                        <p className="text-center py-4 text-xs font-bold text-slate-300 italic">
-                          No items
-                        </p>
-                      ) : (
-                        mealLogs.map((log) => (
-                          <FoodLogItem
-                            key={log.id}
-                            log={log}
-                            onDelete={() =>
-                              deleteLogMut.mutate({
-                                date: currentDate,
-                                id: log.id,
-                              })
-                            }
-                            onEdit={() => {
-                              setEditingLog(log);
-                              setShowEditModal(true);
-                            }}
-                          />
-                        ))
-                      )}
-                      <button
-                        onClick={() => openAddFood(mt)}
-                        className="w-full py-3 rounded-2xl border-2 border-dashed border-slate-100 text-slate-400 font-bold text-xs flex items-center justify-center gap-2 hover:bg-slate-50 transition-all"
-                      >
-                        <Plus size={14} /> Add Food
-                      </button>
+                  {isExpanded && mealLogs.length > 0 && (
+                    <div className="pb-2 pt-2 space-y-2 border-t border-slate-100">
+                      {mealLogs.map((log) => (
+                        <FoodLogItem
+                          key={log.id}
+                          log={log}
+                          variant="compact"
+                          onDelete={() =>
+                            deleteLogMut.mutate({
+                              date: currentDate,
+                              id: log.id,
+                            })
+                          }
+                          onEdit={() => {
+                            setEditingLog(log);
+                            setShowEditModal(true);
+                          }}
+                        />
+                      ))}
                     </div>
+                  )}
+
+                  {isExpanded && mealLogs.length === 0 && (
+                    <p className="px-4 pb-4 pt-0 text-center text-xs font-semibold text-slate-300 border-t border-slate-100">
+                      No items logged
+                    </p>
                   )}
                 </div>
               );

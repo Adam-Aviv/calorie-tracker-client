@@ -1,55 +1,77 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   IonModal,
   IonContent,
   IonHeader,
   IonLoading,
 } from "@ionic/react";
-import { Search, X, Zap, Hash, MessageSquare } from "lucide-react";
-import { format } from "date-fns";
+import { Search, X, Zap, Hash, MessageSquare, Calendar } from "lucide-react";
+import { format, parseISO } from "date-fns";
 import type { Food } from "../types";
 import { useFoodsQuery, useCreateLogMutation } from "../hooks/queries";
 import { useUIStore } from "../store/uiStore";
 import AppButton from "./AppButton";
 import FoodCard from "./FoodCard";
+import { filterFoods } from "../utils/foods";
+import {
+  formatDecimalField,
+  isValidDecimalInput,
+  parseDecimalInput,
+} from "../utils/numberInput";
 
 const AddFoodModal: React.FC = () => {
-  const { showAddFood, closeAddFood, selectedMealType } = useUIStore();
-  const date = format(new Date(), "yyyy-MM-dd");
+  const { showAddFood, closeAddFood, selectedMealType, selectedLogDate } =
+    useUIStore();
 
   const [searchText, setSearchText] = useState("");
   const [selectedFood, setSelectedFood] = useState<Food | null>(null);
-  const [amount, setAmount] = useState(100);
+  const [amount, setAmount] = useState("100");
   const [notes, setNotes] = useState("");
+  const [logDate, setLogDate] = useState(selectedLogDate);
 
-  const foodsQuery = useFoodsQuery({ search: searchText }, showAddFood);
+  useEffect(() => {
+    if (showAddFood) {
+      setLogDate(selectedLogDate);
+    }
+  }, [showAddFood, selectedLogDate]);
+
+  const foodsQuery = useFoodsQuery(showAddFood);
   const createLogMut = useCreateLogMutation();
-  const foods = foodsQuery.data || [];
+  const foods = useMemo(
+    () => filterFoods(foodsQuery.data ?? [], { search: searchText }),
+    [foodsQuery.data, searchText],
+  );
 
   const selectFood = (food: Food) => {
     setSelectedFood(food);
-    setAmount(food.servingSize);
+    setAmount(formatDecimalField(food.servingSize));
   };
 
   const handleClose = () => {
     closeAddFood();
     setSearchText("");
     setSelectedFood(null);
-    setAmount(100);
+    setAmount("100");
     setNotes("");
+    setLogDate(format(new Date(), "yyyy-MM-dd"));
   };
 
   const handleAdd = async () => {
     if (!selectedFood) return;
 
+    const numericAmount = parseDecimalInput(amount);
+    if (numericAmount <= 0) return;
+
     const servings =
-      selectedFood.servingSize > 0 ? amount / selectedFood.servingSize : 1;
+      selectedFood.servingSize > 0
+        ? numericAmount / selectedFood.servingSize
+        : 1;
 
     await createLogMut.mutateAsync({
-      date,
+      date: logDate,
       input: {
         foodId: selectedFood.id,
-        date,
+        date: logDate,
         mealType: selectedMealType,
         servings,
         notes: notes || undefined,
@@ -59,10 +81,13 @@ const AddFoodModal: React.FC = () => {
     handleClose();
   };
 
+  const numericAmount = parseDecimalInput(amount);
   const totalCalories = selectedFood
     ? Math.round(
         selectedFood.calories *
-          (selectedFood.servingSize > 0 ? amount / selectedFood.servingSize : 1)
+          (selectedFood.servingSize > 0
+            ? numericAmount / selectedFood.servingSize
+            : 1)
       )
     : 0;
 
@@ -137,6 +162,26 @@ const AddFoodModal: React.FC = () => {
               <div className="space-y-4">
                 <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-4">
                   <div className="p-2 bg-white rounded-xl shadow-sm">
+                    <Calendar size={20} className="text-indigo-500" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      Date
+                    </p>
+                    <input
+                      type="date"
+                      className="w-full bg-transparent font-black text-lg outline-none text-slate-900"
+                      value={logDate}
+                      onChange={(e) => setLogDate(e.target.value)}
+                    />
+                    <p className="text-[10px] font-semibold text-slate-400 mt-0.5">
+                      {format(parseISO(logDate), "EEEE, MMM d, yyyy")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-4">
+                  <div className="p-2 bg-white rounded-xl shadow-sm">
                     <Hash size={20} className="text-indigo-500" />
                   </div>
                   <div className="flex-1">
@@ -144,14 +189,19 @@ const AddFoodModal: React.FC = () => {
                       Amount ({selectedFood.servingUnit})
                     </p>
                     <input
-                      type="number"
-                      step="any"
-                      min="0"
+                      type="text"
+                      inputMode="decimal"
                       className="w-full bg-transparent font-black text-xl outline-none"
                       value={amount}
-                      onChange={(e) =>
-                        setAmount(parseFloat(e.target.value) || 0)
-                      }
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        if (isValidDecimalInput(next)) setAmount(next);
+                      }}
+                      onBlur={() => {
+                        if (amount === "" || parseDecimalInput(amount) <= 0) {
+                          setAmount(formatDecimalField(selectedFood.servingSize));
+                        }
+                      }}
                     />
                   </div>
                 </div>

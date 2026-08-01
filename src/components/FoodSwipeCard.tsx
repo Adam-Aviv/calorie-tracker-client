@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createGesture } from "@ionic/core";
-import { Edit3, Trash2, Utensils, Zap } from "lucide-react";
+import { Edit3, Trash2, Utensils } from "lucide-react";
 import type { Food } from "../types";
+import FoodNutritionStats from "./FoodNutritionStats";
 
 const BUTTON_WIDTH = 88;
 const BUTTON_GAP = 8;
@@ -71,7 +72,7 @@ const FoodSwipeCard: React.FC<FoodSwipeCardProps> = ({
   };
 
   const transition = dragging ? "none" : "width 0.2s ease, opacity 0.15s ease";
-  const railWidth = Math.max(104, reveal);
+  const railWidth = reveal;
 
   return (
     <div
@@ -85,7 +86,6 @@ const FoodSwipeCard: React.FC<FoodSwipeCardProps> = ({
         overflow: "hidden",
       }}
     >
-      {/* Icon + name stay on the left and never translate off-screen */}
       <div
         className="flex min-w-0 flex-1 items-center gap-4"
         style={{ padding: 16, paddingRight: 8 }}
@@ -117,7 +117,23 @@ const FoodSwipeCard: React.FC<FoodSwipeCardProps> = ({
         </div>
       </div>
 
-      {/* Right rail: calories when closed, edit/delete when open */}
+      <div
+        className="flex shrink-0 items-center"
+        style={{
+          paddingRight: 8,
+          opacity: reveal > 24 ? 0 : 1,
+          transition,
+          pointerEvents: reveal > 0 ? "none" : "auto",
+        }}
+      >
+        <FoodNutritionStats
+          calories={food.calories}
+          protein={food.protein}
+          carbs={food.carbs}
+          fats={food.fats}
+        />
+      </div>
+
       <div
         className="relative shrink-0 overflow-hidden"
         style={{
@@ -125,33 +141,6 @@ const FoodSwipeCard: React.FC<FoodSwipeCardProps> = ({
           transition,
         }}
       >
-        <div
-          className="absolute inset-0 flex flex-col items-end justify-center"
-          style={{
-            padding: 16,
-            paddingLeft: 8,
-            opacity: reveal > 24 ? 0 : 1,
-            transition,
-            pointerEvents: reveal > 0 ? "none" : "auto",
-          }}
-        >
-          <div className="flex items-center gap-1 font-black text-indigo-600">
-            <Zap size={14} fill="currentColor" />
-            <span>{Math.round(food.calories)}</span>
-          </div>
-          <div className="mt-1 flex gap-2">
-            <span className="text-[9px] font-bold text-slate-400">
-              P: {food.protein}g
-            </span>
-            <span className="text-[9px] font-bold text-slate-400">
-              C: {food.carbs}g
-            </span>
-            <span className="text-[9px] font-bold text-slate-400">
-              F: {food.fats}g
-            </span>
-          </div>
-        </div>
-
         <div
           className="flex h-full"
           style={{

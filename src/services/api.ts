@@ -52,7 +52,10 @@ function toFood(row: FoodRow): Food {
   };
 }
 
-function toFoodLog(row: FoodLogRow): FoodLog {
+function toFoodLog(
+  row: FoodLogRow,
+  food?: { servingSize: number; servingUnit: string } | null
+): FoodLog {
   return {
     id: row.id,
     userId: row.user_id,
@@ -65,6 +68,8 @@ function toFoodLog(row: FoodLogRow): FoodLog {
     carbs: Number(row.carbs),
     fats: Number(row.fats),
     foodName: row.food_name,
+    servingSize: food?.servingSize,
+    servingUnit: food?.servingUnit,
     notes: row.notes ?? undefined,
   };
 }
@@ -211,22 +216,13 @@ export const usersAPI = {
 
 // Foods API
 export const foodsAPI = {
-  getAll: async (params?: { search?: string; category?: string }) => {
+  getAll: async () => {
     const userId = await requireUserId();
-    let query = supabase
+    const { data, error } = await supabase
       .from("foods")
       .select("*")
       .eq("user_id", userId)
       .order("name");
-
-    if (params?.search) {
-      query = query.ilike("name", `%${params.search}%`);
-    }
-    if (params?.category) {
-      query = query.eq("category", params.category);
-    }
-
-    const { data, error } = await query;
     throwIfError(error, "Failed to fetch foods");
     return (data ?? []).map(toFood);
   },
@@ -310,19 +306,31 @@ function macrosFromFood(food: Food, servings: number) {
   };
 }
 
+type FoodLogWithServing = FoodLogRow & {
+  foods: { serving_size: number; serving_unit: string } | null;
+};
+
 // Logs API
 export const logsAPI = {
   getDaily: async (date: string): Promise<DailyData> => {
     const userId = await requireUserId();
     const { data, error } = await supabase
       .from("food_logs")
-      .select("*")
+      .select("*, foods ( serving_size, serving_unit )")
       .eq("user_id", userId)
       .eq("date", date)
       .order("created_at");
     throwIfError(error, "Failed to fetch logs");
 
-    const logs = (data ?? []).map(toFoodLog);
+    const logs = ((data ?? []) as FoodLogWithServing[]).map((row) => {
+      const food = row.foods
+        ? {
+            servingSize: Number(row.foods.serving_size),
+            servingUnit: row.foods.serving_unit,
+          }
+        : null;
+      return toFoodLog(row, food);
+    });
     return { logs, summary: buildDailySummary(logs) };
   },
 
@@ -346,7 +354,10 @@ export const logsAPI = {
       .select("*")
       .single();
     throwIfError(error, "Failed to create log");
-    return toFoodLog(ensureData(data, "Log not found"));
+    return toFoodLog(ensureData(data, "Log not found"), {
+      servingSize: food.servingSize,
+      servingUnit: food.servingUnit,
+    });
   },
 
   update: async (
@@ -371,13 +382,14 @@ export const logsAPI = {
 
     const foodId = updates.foodId ?? current.food_id;
     const servings = updates.servings ?? Number(current.servings);
+    let linkedFood: Food | null = null;
 
     if (foodId) {
-      const food = await foodsAPI.getById(foodId);
-      const macros = macrosFromFood(food, servings);
+      linkedFood = await foodsAPI.getById(foodId);
+      const macros = macrosFromFood(linkedFood, servings);
       row.food_id = foodId;
       row.servings = servings;
-      row.food_name = food.name;
+      row.food_name = linkedFood.name;
       Object.assign(row, macros);
     } else if (updates.servings !== undefined) {
       row.servings = servings;
@@ -396,7 +408,28 @@ export const logsAPI = {
       .select("*")
       .single();
     throwIfError(error, "Failed to update log");
-    return toFoodLog(ensureData(data, "Log not found"));
+    const saved = ensureData(data, "Log not found");
+
+    if (linkedFood) {
+      return toFoodLog(saved, {
+        servingSize: linkedFood.servingSize,
+        servingUnit: linkedFood.servingUnit,
+      });
+    }
+
+    if (saved.food_id) {
+      try {
+        const food = await foodsAPI.getById(saved.food_id);
+        return toFoodLog(saved, {
+          servingSize: food.servingSize,
+          servingUnit: food.servingUnit,
+        });
+      } catch {
+        return toFoodLog(saved);
+      }
+    }
+
+    return toFoodLog(saved);
   },
 
   delete: async (id: string) => {

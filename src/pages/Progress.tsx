@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   IonContent,
   IonPage,
@@ -11,7 +11,17 @@ import {
   RefresherEventDetail,
 } from "@ionic/react";
 import { TrendingDown, TrendingUp, Calendar, History, Trash2 } from "lucide-react";
-import { format, parseISO, startOfMonth, isBefore } from "date-fns";
+import {
+  format,
+  parseISO,
+  startOfMonth,
+  endOfMonth,
+  isBefore,
+  subDays,
+  subMonths,
+  subYears,
+  eachMonthOfInterval,
+} from "date-fns";
 import {
   AreaChart,
   Area,
@@ -24,17 +34,56 @@ import {
 import { useAuthStore } from "../store/authStore";
 import {
   useWeightsQuery,
-  useCreateWeightMutation,
   useDeleteWeightMutation,
 } from "../hooks/queries";
 import { useQueryClient } from "@tanstack/react-query";
+
+type TimeRange = "30d" | "90d" | "6m" | "1y" | "all";
+
+const TIME_RANGES: { value: TimeRange; label: string }[] = [
+  { value: "30d", label: "30D" },
+  { value: "90d", label: "90D" },
+  { value: "6m", label: "6M" },
+  { value: "1y", label: "1Y" },
+  { value: "all", label: "ALL" },
+];
+
+const getCutoffDate = (range: TimeRange): Date | null => {
+  const now = new Date();
+  switch (range) {
+    case "30d":
+      return subDays(now, 30);
+    case "90d":
+      return subDays(now, 90);
+    case "6m":
+      return subMonths(now, 6);
+    case "1y":
+      return subYears(now, 1);
+    default:
+      return null;
+  }
+};
+
+const getTickFormat = (range: TimeRange): string => {
+  switch (range) {
+    case "30d":
+    case "90d":
+      return "MMM d";
+    case "6m":
+    case "1y":
+      return "MMM";
+    default:
+      return "MMM yy";
+  }
+};
 
 const Progress: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const qc = useQueryClient();
   const weightsQuery = useWeightsQuery(true);
-  const createMut = useCreateWeightMutation();
   const deleteMut = useDeleteWeightMutation();
+  const [timeRange, setTimeRange] = useState<TimeRange>("30d");
+  const activeRangeIndex = TIME_RANGES.findIndex((r) => r.value === timeRange);
 
   const weights = useMemo(() => weightsQuery.data ?? [], [weightsQuery.data]);
   const latestWeight = weights[weights.length - 1]?.weight ?? 0;
@@ -50,13 +99,47 @@ const Progress: React.FC = () => {
     return thisMonth[thisMonth.length - 1].weight - thisMonth[0].weight;
   }, [weights]);
 
-  // Chart Data Formatting
-  const chartData = useMemo(() => {
-    return weights.map((w) => ({
-      date: format(parseISO(w.date), "MMM d"),
-      weight: w.weight,
-    }));
-  }, [weights]);
+  const filteredWeights = useMemo(() => {
+    const cutoff = getCutoffDate(timeRange);
+    if (!cutoff) return weights;
+    return weights.filter((w) => !isBefore(parseISO(w.date), cutoff));
+  }, [weights, timeRange]);
+
+  const chartData = useMemo(
+    () =>
+      filteredWeights.map((w) => ({
+        timestamp: parseISO(w.date).getTime(),
+        weight: w.weight,
+      })),
+    [filteredWeights]
+  );
+
+  const xAxisTicks = useMemo(() => {
+    if (chartData.length === 0) return [];
+
+    const start = new Date(chartData[0].timestamp);
+    const end = new Date(chartData[chartData.length - 1].timestamp);
+
+    if (timeRange === "6m" || timeRange === "1y" || timeRange === "all") {
+      return eachMonthOfInterval({
+        start: startOfMonth(start),
+        end: endOfMonth(end),
+      }).map((date) => date.getTime());
+    }
+
+    const ticks: number[] = [];
+    let lastDay = "";
+
+    for (const point of chartData) {
+      const day = format(new Date(point.timestamp), "yyyy-MM-dd");
+      if (day !== lastDay) {
+        ticks.push(point.timestamp);
+        lastDay = day;
+      }
+    }
+
+    return ticks;
+  }, [chartData, timeRange]);
 
   const handleRefresh = async (event: CustomEvent<RefresherEventDetail>) => {
     try {
@@ -89,9 +172,9 @@ const Progress: React.FC = () => {
           <IonRefresherContent />
         </IonRefresher>
 
-        <div className="px-3 py-4 space-y-6">
+        <div className="px-2 py-4 space-y-6">
           {/* 1. HERO CHART CARD */}
-          <div className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-100 overflow-hidden">
+          <div className="bg-white rounded-[2.5rem] px-4 py-5 shadow-sm border border-slate-100 overflow-hidden">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h3 className="text-slate-400 text-xs font-black uppercase tracking-widest">
@@ -122,9 +205,9 @@ const Progress: React.FC = () => {
               )}
             </div>
 
-            <div className="h-64 w-full -ml-4">
+            <div className="h-64 w-full -ml-2">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
+                <AreaChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient
                       id="colorWeight"
@@ -133,40 +216,89 @@ const Progress: React.FC = () => {
                       x2="0"
                       y2="1"
                     >
-                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1} />
+                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.25} />
                       <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
                     strokeDasharray="3 3"
                     vertical={false}
-                    stroke="#f1f5f9"
+                    stroke="#e5e7eb"
                   />
                   <XAxis
-                    dataKey="date"
+                    dataKey="timestamp"
+                    type="number"
+                    scale="time"
+                    domain={["dataMin", "dataMax"]}
+                    ticks={xAxisTicks}
+                    tickFormatter={(value) =>
+                      format(new Date(value), getTickFormat(timeRange))
+                    }
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
-                    dy={10}
+                    tick={{ fill: "#9ca3af", fontSize: 11, fontWeight: 500 }}
+                    dy={8}
                   />
-                  <YAxis hide domain={["dataMin - 5", "dataMax + 5"]} />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#9ca3af", fontSize: 11, fontWeight: 500 }}
+                    domain={["dataMin - 2", "dataMax + 2"]}
+                    width={36}
+                  />
                   <Tooltip
+                    labelFormatter={(value) =>
+                      format(new Date(value), "MMM d, yyyy")
+                    }
                     contentStyle={{
-                      borderRadius: "16px",
+                      borderRadius: "12px",
                       border: "none",
-                      boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      fontSize: "13px",
+                      fontWeight: 600,
                     }}
                   />
                   <Area
                     type="monotone"
                     dataKey="weight"
                     stroke="#4f46e5"
-                    strokeWidth={4}
+                    strokeWidth={2.5}
                     fillOpacity={1}
                     fill="url(#colorWeight)"
+                    dot={false}
+                    activeDot={{ r: 4, fill: "#4f46e5", stroke: "#fff", strokeWidth: 2 }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
+            </div>
+
+            <div
+              className="relative flex rounded-full p-1 mt-1"
+              style={{ backgroundColor: "#EBEBF0" }}
+            >
+              <div
+                className="absolute rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-200 ease-out"
+                style={{
+                  top: "4px",
+                  bottom: "4px",
+                  width: `calc((100% - 8px) / ${TIME_RANGES.length})`,
+                  left: `calc(4px + ${activeRangeIndex} * (100% - 8px) / ${TIME_RANGES.length})`,
+                }}
+              />
+              {TIME_RANGES.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setTimeRange(value)}
+                  className={`relative z-10 flex-1 border-0 bg-transparent py-1.5 text-[13px] rounded-full transition-colors duration-200 appearance-none ${
+                    timeRange === value
+                      ? "text-neutral-900 font-bold"
+                      : "text-neutral-500 font-semibold"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 

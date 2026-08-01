@@ -1,16 +1,30 @@
-import React, { useEffect, useState } from "react";
-import { IonModal, IonContent, IonLoading } from "@ionic/react";
-import { X, Zap, Hash, MessageSquare, Utensils } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  IonModal,
+  IonContent,
+  IonHeader,
+  IonLoading,
+} from "@ionic/react";
+import { X, Zap, Hash, MessageSquare, Calendar, Utensils } from "lucide-react";
+import { format, parseISO } from "date-fns";
 import type { FoodLog } from "../types";
-import { useUpdateLogMutation } from "../hooks/queries";
+import { useUpdateLogMutation, qk } from "../hooks/queries";
+import { useQueryClient } from "@tanstack/react-query";
+import AppButton from "./AppButton";
+import {
+  formatDecimalField,
+  isValidDecimalInput,
+  parseDecimalInput,
+} from "../utils/numberInput";
 
 interface EditFoodLogModalProps {
   isOpen: boolean;
   onClose: () => void;
   log: FoodLog | null;
   date: string;
-  onUpdated?: () => void; // Add this line (the '?' makes it optional)
+  onUpdated?: () => void;
 }
+
 type MealType = "breakfast" | "lunch" | "dinner" | "snack";
 
 const EditFoodLogModal: React.FC<EditFoodLogModalProps> = ({
@@ -19,7 +33,9 @@ const EditFoodLogModal: React.FC<EditFoodLogModalProps> = ({
   log,
   date,
 }) => {
-  const [servings, setServings] = useState(1);
+  const qc = useQueryClient();
+  const [amount, setAmount] = useState("100");
+  const [logDate, setLogDate] = useState(date);
   const [mealType, setMealType] = useState<MealType>("breakfast");
   const [notes, setNotes] = useState("");
 
@@ -27,20 +43,49 @@ const EditFoodLogModal: React.FC<EditFoodLogModalProps> = ({
 
   useEffect(() => {
     if (log) {
-      setServings(log.servings);
+      const initialAmount =
+        log.servingSize != null
+          ? log.servings * log.servingSize
+          : log.servings;
+      setAmount(formatDecimalField(initialAmount));
+      setLogDate(log.date);
       setMealType(log.mealType as MealType);
       setNotes(log.notes || "");
     }
   }, [log]);
 
+  const numericAmount = parseDecimalInput(amount);
+  const servings = useMemo(() => {
+    if (!log) return 0;
+    if (log.servingSize != null && log.servingSize > 0) {
+      return numericAmount / log.servingSize;
+    }
+    return numericAmount;
+  }, [log, numericAmount]);
+
+  const totalCalories = useMemo(() => {
+    if (!log || log.servings <= 0) return 0;
+    return Math.round((log.calories / log.servings) * servings);
+  }, [log, servings]);
+
   const handleUpdate = async () => {
     if (!log) return;
+    if (numericAmount <= 0) return;
+
     try {
       await updateLogMut.mutateAsync({
-        date,
+        date: logDate,
         id: log.id,
-        updates: { servings, mealType, notes: notes || undefined },
+        updates: {
+          date: logDate,
+          servings,
+          mealType,
+          notes: notes || undefined,
+        },
       });
+      if (logDate !== date) {
+        await qc.invalidateQueries({ queryKey: qk.daily(date) });
+      }
       onClose();
     } catch (e) {
       console.error(e);
@@ -49,70 +94,87 @@ const EditFoodLogModal: React.FC<EditFoodLogModalProps> = ({
 
   if (!log) return null;
 
+  const servingUnit = log.servingUnit ?? "serving";
+  const defaultAmount =
+    log.servingSize != null
+      ? formatDecimalField(log.servings * log.servingSize)
+      : formatDecimalField(log.servings);
+
   return (
     <IonModal
       isOpen={isOpen}
       onDidDismiss={onClose}
-      initialBreakpoint={1}
-      breakpoints={[0, 1]}
       className="app-modal"
     >
-      <IonContent>
-        <div className="p-6 h-full flex flex-col space-y-8">
-          {/* Header */}
+      <IonHeader className="ion-no-border">
+        <div className="px-3 pt-6 pb-4" style={{ background: "#f8fafc" }}>
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-black text-slate-900">Edit Entry</h2>
+            <h2 className="text-2xl font-black text-slate-900 capitalize">
+              Edit {mealType}
+            </h2>
             <button
+              type="button"
               onClick={onClose}
-              className="p-2 bg-slate-100 rounded-full text-slate-400"
+              className="p-2 bg-white rounded-full text-slate-400 border border-slate-100"
             >
               <X size={20} />
             </button>
           </div>
+        </div>
+      </IonHeader>
 
-          {/* Food Info Card */}
-          <div className="bg-slate-900 p-6 rounded-[2rem] text-center relative overflow-hidden shadow-xl">
-            <h3 className="text-white font-black text-xl mb-1">
+      <IonContent
+        scrollY
+        style={{ "--background": "#f8fafc" } as React.CSSProperties}
+      >
+        <div className="px-3 pb-8 pt-2 space-y-8">
+          <div className="bg-indigo-50 p-6 rounded-4xl text-center relative overflow-hidden">
+            <h3 className="text-indigo-900 font-black text-xl mb-1">
               {log.foodName}
             </h3>
-            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
-              Current: {Math.round(log.calories)} Cal
+            <p className="text-indigo-400 text-xs font-bold uppercase tracking-widest">
+              {totalCalories} Total Calories
             </p>
-            <Zap className="absolute -right-4 -bottom-4 text-white/10 w-24 h-24" />
+            {log.servingSize != null && (
+              <p className="text-indigo-300 text-[10px] font-bold mt-1">
+                Per {log.servingSize} {log.servingUnit}:{" "}
+                {Math.round(log.calories / log.servings)} cal
+              </p>
+            )}
+            <Zap className="absolute -right-4 -bottom-4 text-indigo-200/50 w-24 h-24" />
           </div>
 
-          {/* Inputs */}
           <div className="space-y-4">
-            {/* Servings Input */}
-            <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-4 border border-slate-100">
+            <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-4">
               <div className="p-2 bg-white rounded-xl shadow-sm">
-                <Hash size={20} className="text-indigo-500" />
+                <Calendar size={20} className="text-indigo-500" />
               </div>
               <div className="flex-1">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  Servings
+                  Date
                 </p>
                 <input
-                  type="number"
-                  step="0.5"
-                  className="w-full bg-transparent font-black text-xl outline-none"
-                  value={servings}
-                  onChange={(e) => setServings(parseFloat(e.target.value) || 0)}
+                  type="date"
+                  className="w-full bg-transparent font-black text-lg outline-none text-slate-900"
+                  value={logDate}
+                  onChange={(e) => setLogDate(e.target.value)}
                 />
+                <p className="text-[10px] font-semibold text-slate-400 mt-0.5">
+                  {format(parseISO(logDate), "EEEE, MMM d, yyyy")}
+                </p>
               </div>
             </div>
 
-            {/* Meal Type Select (Customized Style) */}
-            <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-4 border border-slate-100">
+            <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-4">
               <div className="p-2 bg-white rounded-xl shadow-sm">
-                <Utensils size={20} className="text-amber-500" />
+                <Utensils size={20} className="text-indigo-500" />
               </div>
               <div className="flex-1">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  Meal Type
+                  Meal
                 </p>
                 <select
-                  className="w-full bg-transparent font-black text-lg outline-none appearance-none capitalize"
+                  className="w-full bg-transparent font-black text-lg outline-none appearance-none capitalize text-slate-900"
                   value={mealType}
                   onChange={(e) => setMealType(e.target.value as MealType)}
                 >
@@ -124,8 +186,33 @@ const EditFoodLogModal: React.FC<EditFoodLogModalProps> = ({
               </div>
             </div>
 
-            {/* Notes Input */}
-            <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-4 border border-slate-100">
+            <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-4">
+              <div className="p-2 bg-white rounded-xl shadow-sm">
+                <Hash size={20} className="text-indigo-500" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Amount ({servingUnit})
+                </p>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  className="w-full bg-transparent font-black text-xl outline-none"
+                  value={amount}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    if (isValidDecimalInput(next)) setAmount(next);
+                  }}
+                  onBlur={() => {
+                    if (amount === "" || parseDecimalInput(amount) <= 0) {
+                      setAmount(defaultAmount);
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-4">
               <div className="p-2 bg-white rounded-xl shadow-sm">
                 <MessageSquare size={20} className="text-slate-400" />
               </div>
@@ -135,7 +222,7 @@ const EditFoodLogModal: React.FC<EditFoodLogModalProps> = ({
                 </p>
                 <input
                   className="w-full bg-transparent font-bold text-slate-600 outline-none"
-                  placeholder="How was it?"
+                  placeholder="Add a note..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
@@ -143,17 +230,15 @@ const EditFoodLogModal: React.FC<EditFoodLogModalProps> = ({
             </div>
           </div>
 
-          {/* Action Button */}
-          <div className="pt-4">
-            <button
-              onClick={handleUpdate}
-              className="w-full bg-indigo-600 text-white h-16 rounded-[20px] font-black text-lg shadow-lg shadow-indigo-100 active:scale-95 transition-all"
-            >
-              Save Changes
-            </button>
-          </div>
+          <AppButton
+            onClick={handleUpdate}
+            disabled={updateLogMut.isPending}
+          >
+            <Zap size={20} />
+            Save Changes
+          </AppButton>
         </div>
-        <IonLoading isOpen={updateLogMut.isPending} />
+        <IonLoading isOpen={updateLogMut.isPending} message="Saving..." />
       </IonContent>
     </IonModal>
   );
