@@ -93,7 +93,7 @@ const FoodSwipeCard: React.FC<FoodSwipeCardProps> = ({
     >
       <div
         className="flex min-w-0 flex-1 items-stretch"
-        style={{ padding: 16, paddingRight: 0 }}
+        style={{ padding: 16 }}
       >
         <div
           className="grid min-w-0 flex-1 gap-x-4 gap-y-1 items-center"
