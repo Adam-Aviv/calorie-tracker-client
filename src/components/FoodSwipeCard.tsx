@@ -2,7 +2,12 @@ import React, { useEffect, useRef, useState } from "react";
 import { createGesture } from "@ionic/core";
 import { Edit3, Trash2, Utensils } from "lucide-react";
 import type { Food } from "../types";
-import FoodNutritionStats from "./FoodNutritionStats";
+import {
+  FoodCaloriesBadge,
+  FoodMacrosRow,
+  SUBTITLE_ROW_CLASS,
+  TITLE_ROW_CLASS,
+} from "./FoodNutritionStats";
 
 const BUTTON_WIDTH = 88;
 const BUTTON_GAP = 8;
@@ -87,51 +92,66 @@ const FoodSwipeCard: React.FC<FoodSwipeCardProps> = ({
       }}
     >
       <div
-        className="flex min-w-0 flex-1 items-center gap-4"
-        style={{ padding: 16, paddingRight: 8 }}
+        className="flex min-w-0 flex-1 items-stretch"
+        style={{ padding: 16, paddingRight: 0 }}
       >
         <div
-          className="flex shrink-0 items-center justify-center text-indigo-500"
+          className="grid min-w-0 flex-1 gap-x-4 gap-y-1 items-center"
           style={{
-            width: 48,
-            height: 48,
-            background: "#eef2ff",
-            borderRadius: "1rem",
+            gridTemplateColumns: "48px minmax(0, 1fr) auto",
+            gridTemplateRows: "auto auto",
           }}
         >
-          <Utensils size={20} />
-        </div>
-        <div className="min-w-0 flex-1">
+          <div
+            className="row-span-2 flex shrink-0 items-center justify-center text-indigo-500"
+            style={{
+              width: 48,
+              height: 48,
+              background: "#eef2ff",
+              borderRadius: "1rem",
+            }}
+          >
+            <Utensils size={20} />
+          </div>
+
           <h3
-            className="truncate font-semibold capitalize text-slate-900"
+            className={`${TITLE_ROW_CLASS} truncate font-semibold capitalize text-slate-900 leading-none`}
             style={{ fontSize: 14, margin: 0 }}
           >
             {food.name}
           </h3>
+
+          <div
+            style={{
+              opacity: reveal > 24 ? 0 : 1,
+              transition,
+              pointerEvents: reveal > 0 ? "none" : "auto",
+            }}
+          >
+            <FoodCaloriesBadge calories={food.calories} />
+          </div>
+
           <p
-            className="truncate font-black uppercase tracking-widest text-slate-400"
+            className={`${SUBTITLE_ROW_CLASS} truncate font-black uppercase tracking-widest text-slate-400 leading-none`}
             style={{ fontSize: 9, margin: 0 }}
           >
             {food.servingSize} {food.servingUnit} • {food.category}
           </p>
-        </div>
-      </div>
 
-      <div
-        className="flex shrink-0 items-center"
-        style={{
-          paddingRight: 8,
-          opacity: reveal > 24 ? 0 : 1,
-          transition,
-          pointerEvents: reveal > 0 ? "none" : "auto",
-        }}
-      >
-        <FoodNutritionStats
-          calories={food.calories}
-          protein={food.protein}
-          carbs={food.carbs}
-          fats={food.fats}
-        />
+          <div
+            style={{
+              opacity: reveal > 24 ? 0 : 1,
+              transition,
+              pointerEvents: reveal > 0 ? "none" : "auto",
+            }}
+          >
+            <FoodMacrosRow
+              protein={food.protein}
+              carbs={food.carbs}
+              fats={food.fats}
+            />
+          </div>
+        </div>
       </div>
 
       <div

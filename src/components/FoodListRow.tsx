@@ -1,6 +1,11 @@
 import React from "react";
 import { Utensils } from "lucide-react";
-import FoodNutritionStats from "./FoodNutritionStats";
+import {
+  FoodCaloriesBadge,
+  FoodMacrosRow,
+  SUBTITLE_ROW_CLASS,
+  TITLE_ROW_CLASS,
+} from "./FoodNutritionStats";
 
 interface FoodListRowProps {
   name: string;
@@ -38,7 +43,7 @@ const FoodListRow: React.FC<FoodListRowProps> = ({
             }
           : undefined
       }
-      className={`w-full flex items-center justify-between group active:bg-slate-50 transition-all ${className}`}
+      className={`w-full group active:bg-slate-50 transition-all ${className}`}
       style={{
         background: "#ffffff",
         padding: "16px",
@@ -47,9 +52,15 @@ const FoodListRow: React.FC<FoodListRowProps> = ({
         boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
       }}
     >
-      <div className="flex items-center gap-4 flex-1 min-w-0">
+      <div
+        className="grid min-w-0 gap-x-4 gap-y-1 items-center"
+        style={{
+          gridTemplateColumns: "48px minmax(0, 1fr) auto",
+          gridTemplateRows: "auto auto",
+        }}
+      >
         <div
-          className="flex shrink-0 items-center justify-center text-indigo-500"
+          className="row-span-2 flex shrink-0 items-center justify-center text-indigo-500"
           style={{
             width: 48,
             height: 48,
@@ -59,27 +70,25 @@ const FoodListRow: React.FC<FoodListRowProps> = ({
         >
           <Utensils size={20} />
         </div>
-        <div className="flex-1 min-w-0">
-          <h3
-            className="font-semibold text-slate-900 capitalize truncate"
-            style={{ fontSize: "14px", margin: 0 }}
-          >
-            {name}
-          </h3>
-          <p
-            className="font-black text-slate-400 uppercase tracking-widest truncate"
-            style={{ fontSize: "9px", margin: 0 }}
-          >
-            {subtitle}
-          </p>
-        </div>
+
+        <h3
+          className={`${TITLE_ROW_CLASS} font-semibold text-slate-900 capitalize truncate leading-none`}
+          style={{ fontSize: "14px", margin: 0 }}
+        >
+          {name}
+        </h3>
+
+        <FoodCaloriesBadge calories={calories} />
+
+        <p
+          className={`${SUBTITLE_ROW_CLASS} font-black text-slate-400 uppercase tracking-widest truncate leading-none`}
+          style={{ fontSize: "9px", margin: 0 }}
+        >
+          {subtitle}
+        </p>
+
+        <FoodMacrosRow protein={protein} carbs={carbs} fats={fats} />
       </div>
-      <FoodNutritionStats
-        calories={calories}
-        protein={protein}
-        carbs={carbs}
-        fats={fats}
-      />
     </div>
   );
 };
