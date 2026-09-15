@@ -58,6 +58,7 @@ type FoodLogRow = {
   food_name: string;
   notes: string | null;
   created_at: string;
+  source: "manual" | "photo";
 };
 
 type WeightRow = {

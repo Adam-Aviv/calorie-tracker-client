@@ -54,7 +54,7 @@ export interface CreateFoodInput {
 export interface FoodLog {
   id: string;
   userId: string;
-  foodId: string;
+  foodId: string | null;
   date: string;
   mealType: "breakfast" | "lunch" | "dinner" | "snack";
   servings: number;
@@ -66,6 +66,7 @@ export interface FoodLog {
   servingSize?: number;
   servingUnit?: string;
   notes?: string;
+  source?: "manual" | "photo";
 }
 
 export interface CreateFoodLogInput {
