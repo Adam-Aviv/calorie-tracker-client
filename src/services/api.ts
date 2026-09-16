@@ -1,6 +1,7 @@
 import { supabase } from "../lib/supabase";
 import { calculateTDEE } from "../utils/tdee";
 import { buildDailySummary } from "../utils/dailySummary";
+import { FOOD_CATEGORIES } from "../constants/foods";
 import type { Database, FoodLogRow } from "../types/database";
 import type {
   AuthResponse,
@@ -12,6 +13,9 @@ import type {
   DailyData,
   WeightEntry,
   CreateWeightInput,
+  DetectedFoodItem,
+  AnalyzeMealPhotoResponse,
+  ConfirmPhotoMealInput,
 } from "../types";
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
@@ -54,12 +58,12 @@ function toFood(row: FoodRow): Food {
 
 function toFoodLog(
   row: FoodLogRow,
-  food?: { servingSize: number; servingUnit: string } | null
+  food?: { servingSize: number; servingUnit: string } | null,
 ): FoodLog {
   return {
     id: row.id,
     userId: row.user_id,
-    foodId: row.food_id ?? "",
+    foodId: row.food_id,
     date: row.date,
     mealType: row.meal_type,
     servings: Number(row.servings),
@@ -71,6 +75,7 @@ function toFoodLog(
     servingSize: food?.servingSize,
     servingUnit: food?.servingUnit,
     notes: row.notes ?? undefined,
+    source: row.source ?? "manual",
   };
 }
 
@@ -102,12 +107,11 @@ function ensureData<T>(data: T | null, fallback: string): T {
   return data;
 }
 
-// Auth API
 export const authAPI = {
   register: async (
     email: string,
     password: string,
-    name: string
+    name: string,
   ): Promise<AuthResponse> => {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -170,7 +174,6 @@ export const authAPI = {
   },
 };
 
-// Users API
 export const usersAPI = {
   getProfile: async (): Promise<User> => authAPI.getMe(),
 
@@ -207,14 +210,13 @@ export const usersAPI = {
   },
 
   calculateTDEE: async (
-    profile?: Partial<User>
+    profile?: Partial<User>,
   ): Promise<{ tdee: number }> => {
     const user = profile ?? (await authAPI.getMe());
     return { tdee: calculateTDEE(user) };
   },
 };
 
-// Foods API
 export const foodsAPI = {
   getAll: async () => {
     const userId = await requireUserId();
@@ -262,7 +264,7 @@ export const foodsAPI = {
 
   update: async (
     id: string,
-    food: Partial<CreateFoodInput>
+    food: Partial<CreateFoodInput>,
   ): Promise<Food> => {
     const userId = await requireUserId();
     const row: Database["public"]["Tables"]["foods"]["Update"] = {};
@@ -310,7 +312,6 @@ type FoodLogWithServing = FoodLogRow & {
   foods: { serving_size: number; serving_unit: string } | null;
 };
 
-// Logs API
 export const logsAPI = {
   getDaily: async (date: string): Promise<DailyData> => {
     const userId = await requireUserId();
@@ -349,6 +350,7 @@ export const logsAPI = {
         servings: log.servings,
         food_name: food.name,
         notes: log.notes ?? null,
+        source: log.source ?? "manual",
         ...macros,
       })
       .select("*")
@@ -360,9 +362,41 @@ export const logsAPI = {
     });
   },
 
+  createFromPhotoItem: async (input: {
+    date: string;
+    mealType: CreateFoodLogInput["mealType"];
+    item: DetectedFoodItem;
+    notes?: string;
+  }): Promise<FoodLog> => {
+    const userId = await requireUserId();
+    const { data, error } = await supabase
+      .from("food_logs")
+      .insert({
+        user_id: userId,
+        food_id: null,
+        date: input.date,
+        meal_type: input.mealType,
+        servings: 1,
+        food_name: input.item.food_name,
+        notes: input.notes ?? null,
+        source: "photo",
+        calories: input.item.calories,
+        protein: input.item.protein,
+        carbs: input.item.carbs,
+        fats: input.item.fats,
+      })
+      .select("*")
+      .single();
+    throwIfError(error, "Failed to create photo log");
+    return toFoodLog(ensureData(data, "Log not found"), {
+      servingSize: input.item.serving_size,
+      servingUnit: input.item.serving_unit,
+    });
+  },
+
   update: async (
     id: string,
-    updates: Partial<CreateFoodLogInput>
+    updates: Partial<CreateFoodLogInput>,
   ): Promise<FoodLog> => {
     const userId = await requireUserId();
 
@@ -443,7 +477,6 @@ export const logsAPI = {
   },
 };
 
-// Weight API
 export const weightAPI = {
   getAll: async (): Promise<WeightEntry[]> => {
     const userId = await requireUserId();
@@ -474,7 +507,7 @@ export const weightAPI = {
 
   update: async (
     id: string,
-    weight: Partial<CreateWeightInput>
+    weight: Partial<CreateWeightInput>,
   ): Promise<WeightEntry> => {
     const userId = await requireUserId();
     const row: Database["public"]["Tables"]["weight_entries"]["Update"] = {};
@@ -501,6 +534,133 @@ export const weightAPI = {
       .eq("id", id)
       .eq("user_id", userId);
     throwIfError(error, "Failed to delete weight entry");
+  },
+};
+
+function isDetectedItem(value: unknown): value is DetectedFoodItem {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Record<string, unknown>;
+  return (
+    typeof item.food_name === "string" &&
+    typeof item.calories === "number" &&
+    typeof item.protein === "number" &&
+    typeof item.carbs === "number" &&
+    typeof item.fats === "number"
+  );
+}
+
+function parseAnalyzeResponse(payload: unknown): AnalyzeMealPhotoResponse {
+  if (!payload || typeof payload !== "object") {
+    throw new Error("Could not read foods from this photo");
+  }
+  const data = payload as Record<string, unknown>;
+  const rawItems = Array.isArray(data.items)
+    ? data.items
+    : isDetectedItem(payload)
+      ? [payload]
+      : [];
+  const items = rawItems.filter(isDetectedItem).map((item) => ({
+    food_name: item.food_name,
+    serving_size: Number(item.serving_size) || 1,
+    serving_unit:
+      typeof item.serving_unit === "string" ? item.serving_unit : "grams",
+    calories: Number(item.calories) || 0,
+    protein: Number(item.protein) || 0,
+    carbs: Number(item.carbs) || 0,
+    fats: Number(item.fats) || 0,
+    confidence: item.confidence,
+    category:
+      typeof item.category === "string" &&
+      FOOD_CATEGORIES.includes(
+        item.category as (typeof FOOD_CATEGORIES)[number],
+      )
+        ? item.category
+        : "other",
+  }));
+  if (items.length === 0) {
+    throw new Error("No foods detected in this photo");
+  }
+  return { items };
+}
+
+async function invokeAnalyze(imageBase64: string, mediaType: string) {
+  const { data, error } = await supabase.functions.invoke(
+    "analyze-meal-photo",
+    {
+      body: { image_base64: imageBase64, media_type: mediaType },
+    },
+  );
+  if (error) throw new Error(error.message || "Meal analysis failed");
+  return parseAnalyzeResponse(data);
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error("Analysis timed out. Try again or log manually.")),
+      ms,
+    );
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
+export const mealPhotoAPI = {
+  analyze: async (
+    imageBase64: string,
+    mediaType = "image/jpeg",
+  ): Promise<AnalyzeMealPhotoResponse> => {
+    try {
+      return await withTimeout(invokeAnalyze(imageBase64, mediaType), 15_000);
+    } catch {
+      return await withTimeout(invokeAnalyze(imageBase64, mediaType), 15_000);
+    }
+  },
+
+  confirmBatch: async (input: ConfirmPhotoMealInput): Promise<FoodLog[]> => {
+    const logs: FoodLog[] = [];
+    for (const item of input.items) {
+      if (item.saveToLibrary) {
+        const food = await foodsAPI.create({
+          name: item.food_name,
+          calories: item.calories,
+          protein: item.protein,
+          carbs: item.carbs,
+          fats: item.fats,
+          servingSize: item.serving_size,
+          servingUnit: item.serving_unit,
+          category: item.category || "other",
+        });
+        logs.push(
+          await logsAPI.create({
+            foodId: food.id,
+            date: input.date,
+            mealType: input.mealType,
+            servings: 1,
+            notes: input.notes,
+            source: "photo",
+          }),
+        );
+      } else {
+        logs.push(
+          await logsAPI.createFromPhotoItem({
+            date: input.date,
+            mealType: input.mealType,
+            item,
+            notes: input.notes,
+          }),
+        );
+      }
+    }
+    return logs;
   },
 };
 

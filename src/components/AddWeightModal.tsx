@@ -1,100 +1,62 @@
-import React, { useState } from "react";
-import { IonModal, IonContent, IonLoading } from "@ionic/react";
-import { Scale } from "lucide-react";
+import { useState } from "react";
+import { View, Text } from "react-native";
+import { Scale } from "lucide-react-native";
 import { format } from "date-fns";
 import { useUIStore } from "../store/uiStore";
 import { useCreateWeightMutation } from "../hooks/queries";
-import AppButton from "./AppButton";
+import AppButton, { buttonLabelClass } from "./AppButton";
+import AppModal from "./AppModal";
+import Field from "./Field";
 
-const AddWeightModal: React.FC = () => {
+export default function AddWeightModal() {
   const { showAddWeight, closeAddWeight } = useUIStore();
   const createMut = useCreateWeightMutation();
-
-  const [weight, setWeight] = useState<number>(0);
+  const [weight, setWeight] = useState("");
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
   const handleAddWeight = async () => {
-    await createMut.mutateAsync({ weight, date });
+    const parsed = parseFloat(weight);
+    if (!parsed) return;
+    await createMut.mutateAsync({ weight: parsed, date });
     closeAddWeight();
-    // Reset form
-    setWeight(0);
+    setWeight("");
     setDate(format(new Date(), "yyyy-MM-dd"));
   };
 
   return (
-    <>
-      <IonModal
-        isOpen={showAddWeight}
-        onDidDismiss={closeAddWeight}
-        initialBreakpoint={1}
-        breakpoints={[0, 1]}
-        className="app-modal"
-      >
-        <IonContent className="ion-padding">
-          <div className="p-8 space-y-6">
-            <div className="text-center space-y-2">
-              <div
-                className="w-16 h-16 bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-4"
-                style={{ borderRadius: "1.5rem" }}
-              >
-                <Scale size={32} />
-              </div>
-              <h2 className="text-2xl font-black text-slate-900">New Entry</h2>
-              <p className="text-slate-500 text-sm font-medium">
-                Log your weight for today
-              </p>
-            </div>
+    <AppModal visible={showAddWeight} onClose={closeAddWeight} title="New Entry">
+      <View className="items-center mb-6">
+        <View className="w-16 h-16 bg-indigo-50 items-center justify-center rounded-3xl mb-4">
+          <Scale size={32} color="#4f46e5" />
+        </View>
+        <Text className="text-slate-500 text-sm font-medium">
+          Log your weight for today
+        </Text>
+      </View>
 
-            <div className="space-y-4">
-              <div
-                className="bg-slate-50 p-4 border border-slate-100"
-                style={{ borderRadius: "1rem" }}
-              >
-                <label className="text-[10px] font-black uppercase text-slate-400">
-                  Weight (kg)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  className="w-full bg-transparent text-2xl font-bold outline-none"
-                  value={weight || ""}
-                  onChange={(e) => setWeight(parseFloat(e.target.value) || 0)}
-                />
-              </div>
-              <div
-                className="bg-slate-50 p-4 border border-slate-100"
-                style={{ borderRadius: "1rem" }}
-              >
-                <label className="text-[10px] font-black uppercase text-slate-400">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  className="w-full bg-transparent font-bold outline-none"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <AppButton
-              onClick={handleAddWeight}
-              disabled={!weight || createMut.isPending}
-            >
-              <Scale size={20} />
-              Save Entry
-            </AppButton>
-
-            <AppButton variant="muted" onClick={closeAddWeight}>
-              Cancel
-            </AppButton>
-          </div>
-        </IonContent>
-      </IonModal>
-
-      <IonLoading isOpen={createMut.isPending} message="Saving..." />
-    </>
+      <View className="gap-4">
+        <Field
+          label="Weight (kg)"
+          keyboardType="decimal-pad"
+          value={weight}
+          onChangeText={setWeight}
+        />
+        <Field
+          label="Date (YYYY-MM-DD)"
+          value={date}
+          onChangeText={setDate}
+        />
+        <AppButton
+          onPress={handleAddWeight}
+          disabled={!parseFloat(weight) || createMut.isPending}
+        >
+          <Scale size={20} color="#fff" />
+          <Text className={buttonLabelClass.primary}>Save Entry</Text>
+        </AppButton>
+        <AppButton variant="muted" onPress={closeAddWeight}>
+          <Text className={buttonLabelClass.muted}>Cancel</Text>
+        </AppButton>
+      </View>
+    </AppModal>
   );
-};
-
-export default AddWeightModal;
+}

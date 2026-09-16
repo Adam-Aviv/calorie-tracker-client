@@ -1,38 +1,36 @@
-import React from "react";
+import { View, Text } from "react-native";
 
 interface MacroBarProps {
   label: string;
   current: number;
   goal: number;
-  colorClass: string; // e.g., 'bg-emerald-500'
+  colorClass?: string;
 }
 
-const MacroBar: React.FC<MacroBarProps> = ({
+export default function MacroBar({
   label,
   current,
   goal,
-  colorClass,
-}) => {
+  colorClass = "bg-indigo-600",
+}: MacroBarProps) {
   const percentage = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
 
   return (
-    <div className="flex flex-col items-center gap-1.5">
-      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">
+    <View className="flex-1 items-center gap-1.5">
+      <Text className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">
         {label}
-      </span>
-      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-500 ${colorClass} shadow-[0_0_10px_rgba(0,0,0,0.1)]`}
+      </Text>
+      <View className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+        <View
+          className={`h-full rounded-full ${colorClass}`}
           style={{ width: `${percentage}%` }}
         />
-      </div>
-      <span className="text-xs font-bold text-slate-700 text-center">
+      </View>
+      <Text className="text-xs font-bold text-slate-700 text-center">
         {Math.round(current)}
-        <span className="text-slate-300 mx-0.5">/</span>
+        <Text className="text-slate-300"> / </Text>
         {Math.round(goal)}g
-      </span>
-    </div>
+      </Text>
+    </View>
   );
-};
-
-export default MacroBar;
+}

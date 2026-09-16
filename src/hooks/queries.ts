@@ -1,7 +1,7 @@
-// src/hooks/queries.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useHistory } from "react-router-dom";
+import { router } from "expo-router";
 import type {
+  ConfirmPhotoMealInput,
   CreateFoodInput,
   CreateFoodLogInput,
   CreateWeightInput,
@@ -10,11 +10,13 @@ import type {
   FoodLog,
   User,
   WeightEntry,
+  AnalyzeMealPhotoResponse,
 } from "../types";
 import {
   authAPI,
   foodsAPI,
   logsAPI,
+  mealPhotoAPI,
   usersAPI,
   weightAPI,
 } from "../services/api";
@@ -23,12 +25,9 @@ import { useAuthStore } from "../store/authStore";
 export const qk = {
   me: ["auth", "me"] as const,
   profile: ["users", "profile"] as const,
-
   foods: ["foods", "all"] as const,
   food: (id: string) => ["foods", "byId", id] as const,
-
   daily: (date: string) => ["logs", "daily", date] as const,
-
   weights: ["weight", "all"] as const,
   weightLatest: ["weight", "latest"] as const,
   weightTrend: (days: number) => ["weight", "trend", days] as const,
@@ -39,7 +38,6 @@ function apiErrorMessage(err: unknown, fallback: string) {
   return fallback;
 }
 
-// -------------------- AUTH --------------------
 type AuthResult = {
   success: boolean;
   data: { id: string; name: string; email: string };
@@ -47,7 +45,6 @@ type AuthResult = {
 
 export function useLoginMutation(isRegister: boolean) {
   const qc = useQueryClient();
-  const history = useHistory();
   const setUser = useAuthStore((s) => s.setUser);
 
   return useMutation<
@@ -60,7 +57,7 @@ export function useLoginMutation(isRegister: boolean) {
         return authAPI.register(
           payload.email,
           payload.password,
-          payload.name || ""
+          payload.name || "",
         );
       }
       return authAPI.login(payload.email, payload.password);
@@ -79,7 +76,7 @@ export function useLoginMutation(isRegister: boolean) {
       };
 
       setUser(minimalUser);
-      history.replace("/tabs/diary");
+      router.replace("/(tabs)/diary");
 
       try {
         const profile = await qc.fetchQuery({
@@ -98,7 +95,6 @@ export function useLoginMutation(isRegister: boolean) {
   });
 }
 
-// -------------------- USERS --------------------
 export function useProfileQuery(enabled = true) {
   return useQuery<User | undefined>({
     queryKey: qk.profile,
@@ -128,20 +124,11 @@ export function useCalculateTDEEMutation() {
   });
 }
 
-// -------------------- FOODS --------------------
 export function useFoodsQuery(enabled = true) {
   return useQuery<Food[]>({
     queryKey: qk.foods,
     queryFn: () => foodsAPI.getAll(),
     enabled,
-  });
-}
-
-export function useFoodByIdQuery(id?: string, enabled = true) {
-  return useQuery<Food | undefined>({
-    queryKey: id ? qk.food(id) : (["foods", "byId", "missing"] as const),
-    queryFn: () => foodsAPI.getById(id!),
-    enabled: enabled && !!id,
   });
 }
 
@@ -180,7 +167,6 @@ export function useDeleteFoodMutation() {
   });
 }
 
-// -------------------- LOGS --------------------
 export function useDailyLogsQuery(date: string, enabled = true) {
   return useQuery<DailyData | undefined>({
     queryKey: qk.daily(date),
@@ -227,7 +213,6 @@ export function useDeleteLogMutation() {
   });
 }
 
-// -------------------- WEIGHT --------------------
 export function useWeightsQuery(enabled = true) {
   return useQuery<WeightEntry[]>({
     queryKey: qk.weights,
@@ -246,26 +231,36 @@ export function useCreateWeightMutation() {
   });
 }
 
-export function useUpdateWeightMutation() {
-  const qc = useQueryClient();
-  return useMutation<
-    WeightEntry | undefined,
-    Error,
-    { id: string; updates: Partial<CreateWeightInput> }
-  >({
-    mutationFn: ({ id, updates }) => weightAPI.update(id, updates),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: qk.weights });
-    },
-  });
-}
-
 export function useDeleteWeightMutation() {
   const qc = useQueryClient();
   return useMutation<void, Error, string>({
     mutationFn: weightAPI.delete,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.weights });
+    },
+  });
+}
+
+export function useAnalyzeMealPhotoMutation() {
+  return useMutation<
+    AnalyzeMealPhotoResponse,
+    Error,
+    { imageBase64: string; mediaType?: string }
+  >({
+    mutationFn: ({ imageBase64, mediaType }) =>
+      mealPhotoAPI.analyze(imageBase64, mediaType),
+  });
+}
+
+export function useConfirmPhotoMealMutation() {
+  const qc = useQueryClient();
+  return useMutation<FoodLog[], Error, ConfirmPhotoMealInput>({
+    mutationFn: mealPhotoAPI.confirmBatch,
+    onSuccess: (_logs, vars) => {
+      qc.invalidateQueries({ queryKey: qk.daily(vars.date) });
+      if (vars.items.some((item) => item.saveToLibrary)) {
+        qc.invalidateQueries({ queryKey: ["foods"] });
+      }
     },
   });
 }

@@ -75,6 +75,36 @@ export interface CreateFoodLogInput {
   mealType: "breakfast" | "lunch" | "dinner" | "snack";
   servings: number;
   notes?: string;
+  source?: "manual" | "photo";
+}
+
+export interface DetectedFoodItem {
+  food_name: string;
+  serving_size: number;
+  serving_unit: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  confidence?: "low" | "medium" | "high";
+  category?: string;
+}
+
+export interface AnalyzeMealPhotoResponse {
+  items: DetectedFoodItem[];
+}
+
+export interface PhotoReviewItem extends DetectedFoodItem {
+  clientId: string;
+  saveToLibrary: boolean;
+  category: string;
+}
+
+export interface ConfirmPhotoMealInput {
+  date: string;
+  mealType: FoodLog["mealType"];
+  items: PhotoReviewItem[];
+  notes?: string;
 }
 
 export interface DailySummary {

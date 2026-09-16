@@ -1,34 +1,49 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
 # dependencies
-/node_modules
-/.pnp
-.pnp.js
+node_modules/
 
-# testing
-/coverage
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
 
-# production
-/dist
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
 
-# misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-/.nx
-/.nx/cache
-/.vscode/*
-!/.vscode/extensions.json
-.idea
+# Metro
+.metro-health-check*
 
-npm-debug.log*
-yarn-debug.log*
+# debug
+npm-debug.*
+yarn-debug.*
 yarn-error.log*
 
-# Optional eslint cache
-.eslintcache
+# macOS
+.DS_Store
+*.pem
 
+# local env files
 .env
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
 /ios
+/android
+
+# misc
+.idea
+/.vscode/*
+!/.vscode/extensions.json
+.eslintcache
+tmp-expo/

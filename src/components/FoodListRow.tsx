@@ -1,11 +1,6 @@
-import React from "react";
-import { Utensils } from "lucide-react";
-import {
-  FoodCaloriesBadge,
-  FoodMacrosRow,
-  SUBTITLE_ROW_CLASS,
-  TITLE_ROW_CLASS,
-} from "./FoodNutritionStats";
+import { Pressable, View, Text } from "react-native";
+import { Utensils } from "lucide-react-native";
+import { FoodCaloriesBadge, FoodMacrosRow } from "./FoodNutritionStats";
 
 interface FoodListRowProps {
   name: string;
@@ -14,83 +9,48 @@ interface FoodListRowProps {
   protein: number;
   carbs: number;
   fats: number;
-  onClick?: () => void;
-  className?: string;
+  onPress?: () => void;
 }
 
-const FoodListRow: React.FC<FoodListRowProps> = ({
+export default function FoodListRow({
   name,
   subtitle,
   calories,
   protein,
   carbs,
   fats,
-  onClick,
-  className = "",
-}) => {
+  onPress,
+}: FoodListRowProps) {
   return (
-    <div
-      role={onClick ? "button" : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      onClick={onClick}
-      onKeyDown={
-        onClick
-          ? (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onClick();
-              }
-            }
-          : undefined
-      }
-      className={`w-full group active:bg-slate-50 transition-all ${className}`}
-      style={{
-        background: "#ffffff",
-        padding: "16px",
-        borderRadius: "1.5rem",
-        border: "1px solid #f1f5f9",
-        boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-      }}
+    <Pressable
+      onPress={onPress}
+      className="w-full bg-white p-4 rounded-3xl border border-slate-100"
     >
-      <div
-        className="grid min-w-0 gap-x-4 gap-y-1 items-center"
-        style={{
-          gridTemplateColumns: "48px minmax(0, 1fr) auto",
-          gridTemplateRows: "auto auto",
-        }}
-      >
-        <div
-          className="row-span-2 flex shrink-0 items-center justify-center text-indigo-500"
-          style={{
-            width: 48,
-            height: 48,
-            background: "#eef2ff",
-            borderRadius: "1rem",
-          }}
-        >
-          <Utensils size={20} />
-        </div>
-
-        <h3
-          className={`${TITLE_ROW_CLASS} font-semibold text-slate-900 capitalize truncate leading-none`}
-          style={{ fontSize: "14px", margin: 0 }}
-        >
-          {name}
-        </h3>
-
-        <FoodCaloriesBadge calories={calories} />
-
-        <p
-          className={`${SUBTITLE_ROW_CLASS} font-black text-slate-400 uppercase tracking-widest truncate leading-none`}
-          style={{ fontSize: "9px", margin: 0 }}
-        >
-          {subtitle}
-        </p>
-
-        <FoodMacrosRow protein={protein} carbs={carbs} fats={fats} />
-      </div>
-    </div>
+      <View className="flex-row items-center gap-4">
+        <View className="w-12 h-12 items-center justify-center bg-indigo-50 rounded-2xl">
+          <Utensils size={20} color="#6366f1" />
+        </View>
+        <View className="flex-1 min-w-0">
+          <View className="flex-row items-center justify-between gap-2">
+            <Text
+              className="font-semibold text-slate-900 capitalize text-sm flex-1"
+              numberOfLines={1}
+            >
+              {name}
+            </Text>
+            <FoodCaloriesBadge calories={calories} />
+          </View>
+          <View className="flex-row items-center justify-between gap-2 mt-1">
+            <Text
+              className="font-black text-slate-400 uppercase tracking-widest text-[9px] flex-1"
+              numberOfLines={1}
+            >
+              {subtitle}
+            </Text>
+            <FoodMacrosRow protein={protein} carbs={carbs} fats={fats} />
+          </View>
+        </View>
+      </View>
+    </Pressable>
   );
-};
-
-export default FoodListRow;
+}

@@ -160,6 +160,7 @@ export interface Database {
           fats: number;
           food_name: string;
           notes?: string | null;
+          source?: "manual" | "photo";
         };
         Update: {
           food_id?: string | null;
@@ -172,6 +173,7 @@ export interface Database {
           fats?: number;
           food_name?: string;
           notes?: string | null;
+          source?: "manual" | "photo";
         };
         Relationships: [];
       };
