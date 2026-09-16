@@ -1,11 +1,7 @@
-import React from "react";
-import {
-  IonItem,
-  IonItemSliding,
-  IonItemOptions,
-  IonItemOption,
-} from "@ionic/react";
-import { Edit3, Trash2 } from "lucide-react";
+import { View } from "react-native";
+import { Swipeable } from "react-native-gesture-handler";
+import { Pressable } from "react-native";
+import { Edit3, Trash2 } from "lucide-react-native";
 import type { FoodLog } from "../types";
 import { formatFoodLogAmount } from "../utils/formatFoodLog";
 import FoodListRow from "./FoodListRow";
@@ -14,88 +10,46 @@ interface FoodLogItemProps {
   log: FoodLog;
   onDelete: (id: string) => void;
   onEdit: (log: FoodLog) => void;
-  variant?: "default" | "compact";
 }
 
-const FoodLogItem: React.FC<FoodLogItemProps> = ({
+export default function FoodLogItem({
   log,
   onDelete,
   onEdit,
-  variant = "default",
-}) => {
-  const subtitle =
+}: FoodLogItemProps) {
+  const amount =
     formatFoodLogAmount(log) ??
     `${log.servings} serving${log.servings !== 1 ? "s" : ""}`;
-
-  if (variant === "compact") {
-    return (
-      <IonItemSliding className="rounded-3xl overflow-hidden">
-        <IonItem
-          lines="none"
-          className="--background: transparent --padding-start: 0 --inner-padding-end: 0 --min-height: 0"
-        >
-          <FoodListRow
-            name={log.foodName}
-            subtitle={subtitle}
-            calories={log.calories}
-            protein={log.protein}
-            carbs={log.carbs}
-            fats={log.fats}
-            onClick={() => onEdit(log)}
-          />
-        </IonItem>
-
-        <IonItemOptions side="end">
-          <IonItemOption
-            onClick={() => onEdit(log)}
-            className="bg-slate-100 !text-slate-600"
-          >
-            <Edit3 size={20} />
-          </IonItemOption>
-          <IonItemOption
-            onClick={() => onDelete(log.id)}
-            className="bg-rose-500"
-          >
-            <Trash2 size={20} />
-          </IonItemOption>
-        </IonItemOptions>
-      </IonItemSliding>
-    );
-  }
+  const subtitle = log.notes ? `${amount} • ${log.notes}` : amount;
 
   return (
-    <IonItemSliding className="mb-3 rounded-3xl overflow-hidden">
-      <IonItem
-        lines="none"
-        className="--background: transparent --padding-start: 0 --inner-padding-end: 0"
-      >
-        <FoodListRow
-          name={log.foodName}
-          subtitle={log.notes ? `${subtitle} • ${log.notes}` : subtitle}
-          calories={log.calories}
-          protein={log.protein}
-          carbs={log.carbs}
-          fats={log.fats}
-          onClick={() => onEdit(log)}
-        />
-      </IonItem>
-
-      <IonItemOptions side="end">
-        <IonItemOption
-          onClick={() => onEdit(log)}
-          className="bg-slate-100 !text-slate-600 rounded-2xl ml-2"
-        >
-          <Edit3 size={20} />
-        </IonItemOption>
-        <IonItemOption
-          onClick={() => onDelete(log.id)}
-          className="bg-rose-500 rounded-2xl ml-2"
-        >
-          <Trash2 size={20} />
-        </IonItemOption>
-      </IonItemOptions>
-    </IonItemSliding>
+    <Swipeable
+      renderRightActions={() => (
+        <View className="flex-row overflow-hidden rounded-3xl ml-2">
+          <Pressable
+            onPress={() => onEdit(log)}
+            className="w-[72px] items-center justify-center bg-slate-100"
+          >
+            <Edit3 size={20} color="#475569" />
+          </Pressable>
+          <Pressable
+            onPress={() => onDelete(log.id)}
+            className="w-[72px] items-center justify-center bg-rose-500"
+          >
+            <Trash2 size={20} color="#ffffff" />
+          </Pressable>
+        </View>
+      )}
+    >
+      <FoodListRow
+        name={log.foodName}
+        subtitle={subtitle}
+        calories={log.calories}
+        protein={log.protein}
+        carbs={log.carbs}
+        fats={log.fats}
+        onPress={() => onEdit(log)}
+      />
+    </Swipeable>
   );
-};
-
-export default FoodLogItem;
+}

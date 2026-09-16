@@ -1,102 +1,93 @@
-/* components/GlobalActionModal.tsx */
-import React, { useState } from "react";
-import { IonModal, IonContent } from "@ionic/react";
-import { Utensils, Scale, PlusCircle, ArrowLeft } from "lucide-react";
-import AppButton from "./AppButton";
+import { useState } from "react";
+import { View, Text, Pressable } from "react-native";
+import { Utensils, Scale, PlusCircle, ArrowLeft, Camera } from "lucide-react-native";
+import AppButton, { buttonLabelClass } from "./AppButton";
+import AppModal from "./AppModal";
+import { MEAL_LABELS, MEAL_TYPES, type MealType } from "../constants/foods";
+
+export type GlobalAction =
+  | { type: "weight" }
+  | { type: "library" }
+  | { type: "log"; meal: MealType }
+  | { type: "photo"; meal: MealType };
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onAction: (
-    type: "weight" | "library" | "breakfast" | "lunch" | "dinner" | "snack"
-  ) => void;
+  onAction: (action: GlobalAction) => void;
 }
 
-const GlobalActionModal: React.FC<Props> = ({ isOpen, onClose, onAction }) => {
-  const [showMealSelection, setShowMealSelection] = useState(false);
+export default function GlobalActionModal({ isOpen, onClose, onAction }: Props) {
+  const [step, setStep] = useState<"root" | "log" | "photo">("root");
 
   const handleClose = () => {
-    setShowMealSelection(false);
+    setStep("root");
     onClose();
   };
 
-  const handleMealSelect = (
-    meal: "breakfast" | "lunch" | "dinner" | "snack"
-  ) => {
-    setShowMealSelection(false);
-    onAction(meal);
-  };
-
   return (
-    <IonModal
-      isOpen={isOpen}
-      onDidDismiss={handleClose}
-      initialBreakpoint={1}
-      breakpoints={[0, 1]}
-      className="app-modal"
+    <AppModal
+      visible={isOpen}
+      onClose={handleClose}
+      title={step === "root" ? "Quick Actions" : "Select Meal"}
     >
-      <IonContent className="ion-padding">
-        <div className="p-4 space-y-3">
-          {!showMealSelection ? (
-            <>
-              <h2 className="text-xl font-black text-slate-900 mb-4 text-center">
-                Quick Actions
-              </h2>
-
-              <AppButton onClick={() => setShowMealSelection(true)}>
-                <Utensils size={20} />
-                Log Food
-              </AppButton>
-
-              <AppButton onClick={() => onAction("weight")}>
-                <Scale size={20} />
-                Track Weight
-              </AppButton>
-
-              <AppButton onClick={() => onAction("library")}>
-                <PlusCircle size={20} />
-                Create Food
-              </AppButton>
-            </>
-          ) : (
-            <>
-              <div className="flex items-center gap-3 mb-4">
-                <button
-                  onClick={() => setShowMealSelection(false)}
-                  className="p-2 text-slate-400 hover:text-slate-600"
-                >
-                  <ArrowLeft size={20} />
-                </button>
-                <h2 className="text-xl font-black text-slate-900">
-                  Select Meal
-                </h2>
-              </div>
-
-              <AppButton onClick={() => handleMealSelect("breakfast")}>
-                <Utensils size={20} />
-                Breakfast
-              </AppButton>
-
-              <AppButton onClick={() => handleMealSelect("lunch")}>
-                <Utensils size={20} />
-                Lunch
-              </AppButton>
-
-              <AppButton onClick={() => handleMealSelect("dinner")}>
-                <Utensils size={20} />
-                Dinner
-              </AppButton>
-
-              <AppButton onClick={() => handleMealSelect("snack")}>
-                <Utensils size={20} />
-                Snack
-              </AppButton>
-            </>
-          )}
-        </div>
-      </IonContent>
-    </IonModal>
+      {step !== "root" ? (
+        <View className="gap-3">
+          <Pressable
+            onPress={() => setStep("root")}
+            className="flex-row items-center gap-2 mb-2"
+          >
+            <ArrowLeft size={20} color="#94a3b8" />
+            <Text className="text-slate-400 font-bold">Back</Text>
+          </Pressable>
+          {MEAL_TYPES.map((meal) => (
+            <AppButton
+              key={meal}
+              onPress={() => {
+                const kind = step;
+                setStep("root");
+                onAction(
+                  kind === "photo"
+                    ? { type: "photo", meal }
+                    : { type: "log", meal },
+                );
+              }}
+            >
+              <Utensils size={20} color="#fff" />
+              <Text className={buttonLabelClass.primary}>{MEAL_LABELS[meal]}</Text>
+            </AppButton>
+          ))}
+        </View>
+      ) : (
+        <View className="gap-3">
+          <AppButton onPress={() => setStep("log")}>
+            <Utensils size={20} color="#fff" />
+            <Text className={buttonLabelClass.primary}>Log Food</Text>
+          </AppButton>
+          <AppButton onPress={() => setStep("photo")}>
+            <Camera size={20} color="#fff" />
+            <Text className={buttonLabelClass.primary}>Snap a meal</Text>
+          </AppButton>
+          <AppButton
+            onPress={() => {
+              setStep("root");
+              onAction({ type: "weight" });
+            }}
+          >
+            <Scale size={20} color="#fff" />
+            <Text className={buttonLabelClass.primary}>Track Weight</Text>
+          </AppButton>
+          <AppButton
+            onPress={() => {
+              setStep("root");
+              onAction({ type: "library" });
+            }}
+          >
+            <PlusCircle size={20} color="#fff" />
+            <Text className={buttonLabelClass.primary}>Create Food</Text>
+          </AppButton>
+        </View>
+      )}
+    </AppModal>
   );
-};
-
-export default GlobalActionModal;
+}

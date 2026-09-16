@@ -1,72 +1,40 @@
-import { IonButton } from "@ionic/react";
+import { Pressable, View, type PressableProps } from "react-native";
 import type { ReactNode } from "react";
 
 type AppButtonVariant = "primary" | "ghost" | "muted";
 
-interface AppButtonProps {
+interface AppButtonProps extends Omit<PressableProps, "children"> {
   children: ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
   variant?: AppButtonVariant;
   className?: string;
-  type?: "button" | "submit";
 }
 
-const variantStyles: Record<AppButtonVariant, React.CSSProperties> = {
-  primary: {
-    "--background": "#0f172a",
-    "--background-activated": "#1e293b",
-    "--color": "#ffffff",
-    "--border-radius": "20px",
-    "--padding-top": "0",
-    "--padding-bottom": "0",
-    "--box-shadow": "0 20px 25px -5px rgb(0 0 0 / 0.1)",
-  } as React.CSSProperties,
-  ghost: {
-    "--color": "#ef4444",
-    "--background-activated": "#fef2f2",
-    "--border-radius": "20px",
-    "--padding-top": "0",
-    "--padding-bottom": "0",
-  } as React.CSSProperties,
-  muted: {
-    "--color": "#94a3b8",
-    "--background-activated": "#f8fafc",
-    "--border-radius": "20px",
-    "--padding-top": "0",
-    "--padding-bottom": "0",
-  } as React.CSSProperties,
+const variantClass: Record<AppButtonVariant, string> = {
+  primary: "bg-slate-900 h-16 rounded-[20px]",
+  ghost: "h-14 rounded-[20px]",
+  muted: "h-14 rounded-[20px]",
 };
 
-const AppButton: React.FC<AppButtonProps> = ({
+export const buttonLabelClass: Record<AppButtonVariant, string> = {
+  primary: "text-white font-black text-lg",
+  ghost: "text-rose-500 font-bold",
+  muted: "text-slate-400 font-bold",
+};
+
+export default function AppButton({
   children,
-  onClick,
-  disabled,
   variant = "primary",
+  disabled,
   className = "",
-  type = "button",
-}) => {
-  const isPrimary = variant === "primary";
-
+  ...props
+}: AppButtonProps) {
   return (
-    <IonButton
-      expand="block"
-      fill={isPrimary ? "solid" : "clear"}
-      onClick={onClick}
+    <Pressable
       disabled={disabled}
-      type={type}
-      className={
-        isPrimary
-          ? `h-16 font-black text-lg ${className}`
-          : `h-14 font-bold ${className}`
-      }
-      style={variantStyles[variant]}
+      className={`items-center justify-center ${variantClass[variant]} ${disabled ? "opacity-50" : "active:opacity-80"} ${className}`}
+      {...props}
     >
-      <div className={`flex items-center ${isPrimary ? "gap-3" : "gap-2"}`}>
-        {children}
-      </div>
-    </IonButton>
+      <View className="flex-row items-center gap-3">{children}</View>
+    </Pressable>
   );
-};
-
-export default AppButton;
+}

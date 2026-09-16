@@ -1,0 +1,8 @@
+{
+  "permissions": [
+    {
+      "name": "analyze-meal-photo",
+      "verify_jwt": true
+    }
+  ]
+}

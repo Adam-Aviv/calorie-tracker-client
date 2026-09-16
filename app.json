@@ -1,0 +1,53 @@
+{
+  "expo": {
+    "name": "CalorieTracker",
+    "slug": "calorie-tracker",
+    "scheme": "calorietracker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f8fafc"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.adamaviv.calorietracker",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Take a photo of your meal to estimate nutrition.",
+        "NSPhotoLibraryUsageDescription": "Choose a meal photo to estimate nutrition."
+      }
+    },
+    "android": {
+      "package": "com.adamaviv.calorietracker",
+      "adaptiveIcon": {
+        "backgroundColor": "#EEF2FF",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "CAMERA",
+        "READ_MEDIA_IMAGES"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Take a photo of your meal to estimate nutrition.",
+          "photosPermission": "Choose a meal photo to estimate nutrition."
+        }
+      ],
+      "expo-status-bar",
+      "expo-splash-screen"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
